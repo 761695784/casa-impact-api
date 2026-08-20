@@ -68,10 +68,18 @@ it("retourne la liste complète des permissions pour administrateur-principal vi
 });
 
 it("ne retourne que les permissions explicitement assignées pour un rôle non-principal", function () {
+    // Ce test vérifiait à l'origine un tableau vide, car `communication`
+    // n'avait encore aucune permission assignée (Module 1). Depuis le
+    // Module 2, `RolesAndPermissionsSeeder` donne à `communication` les
+    // permissions `pages.*`/`domains.*` — c'est le comportement voulu.
+    // On compare donc dynamiquement à ce que le rôle possède réellement
+    // plutôt qu'à une liste figée qui serait redevenue obsolète à chaque
+    // futur module ajoutant des permissions à ce rôle.
     $user = User::factory()->create();
     $user->assignRole('communication');
 
     $response = $this->actingAs($user)->getJson('/api/admin/me');
 
-    $response->assertOk()->assertJsonPath('permissions', []);
+    $response->assertOk()
+        ->assertJsonPath('permissions', $user->getAllPermissions()->pluck('name')->values()->all());
 });
