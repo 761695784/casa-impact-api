@@ -1,13 +1,19 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ApplicationCallController as AdminApplicationCallController;
+use App\Http\Controllers\Api\Admin\ApplicationController as AdminApplicationController;
 use App\Http\Controllers\Api\Admin\AuthController;
 use App\Http\Controllers\Api\Admin\DomainController as AdminDomainController;
+use App\Http\Controllers\Api\Admin\NewsController as AdminNewsController;
 use App\Http\Controllers\Api\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Api\Admin\ProgramController as AdminProgramController;
 use App\Http\Controllers\Api\Admin\ProgramTypeController as AdminProgramTypeController;
 use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\Admin\UserController;
+use App\Http\Controllers\Api\Public\ApplicationCallController as PublicApplicationCallController;
+use App\Http\Controllers\Api\Public\ApplicationController as PublicApplicationController;
 use App\Http\Controllers\Api\Public\DomainController as PublicDomainController;
+use App\Http\Controllers\Api\Public\NewsController as PublicNewsController;
 use App\Http\Controllers\Api\Public\PageController as PublicPageController;
 use App\Http\Controllers\Api\Public\ProgramController as PublicProgramController;
 use App\Http\Controllers\Api\Public\ProgramTypeController as PublicProgramTypeController;
@@ -23,8 +29,9 @@ use Illuminate\Support\Facades\Route;
 |   - /api/public/*  : sans authentification
 |
 | Module 1 (Administration) + Module 2 (Pages/Domaines) + Module 3
-| (Programmes). Chaque nouveau module ajoutera son groupe de routes ici,
-| sous le même préfixe /admin ou /public selon le cas.
+| (Programmes) + Module 4 (Appels à candidatures) + Module 5 (Candidatures)
+| + Module 6 (Actualités). Chaque nouveau module ajoutera son groupe de
+| routes ici.
 */
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -52,9 +59,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Programmes : CRUD complet (contrairement à Domaines).
         Route::apiResource('programs', AdminProgramController::class);
 
-        // Types de programme : table éditable (décision validée le
-        // 2026-08-19, contrairement à Domain) — CRUD complet.
+        // Types de programme : table éditable — CRUD complet.
         Route::apiResource('program-types', AdminProgramTypeController::class);
+
+        // Appels à candidatures : CRUD complet.
+        Route::apiResource('application-calls', AdminApplicationCallController::class);
+
+        // Candidatures : pas de store() (soumission publique uniquement).
+        Route::apiResource('applications', AdminApplicationController::class)
+            ->only(['index', 'show', 'update', 'destroy']);
+        Route::get('applications/{application}/documents/{document}/download', [AdminApplicationController::class, 'downloadDocument'])
+            ->name('applications.documents.download');
+        // Sortie de liste d'attente en un clic.
+        Route::post('applications/{application}/promote', [AdminApplicationController::class, 'promote'])
+            ->name('applications.promote');
+
+        // Actualités : CRUD complet.
+        Route::apiResource('news', AdminNewsController::class);
     });
 });
 
@@ -69,4 +90,16 @@ Route::prefix('public')->name('public.')->group(function () {
     Route::get('programs/{slug}', [PublicProgramController::class, 'show'])->name('programs.show');
 
     Route::get('program-types', [PublicProgramTypeController::class, 'index'])->name('program-types.index');
+
+    Route::get('application-calls', [PublicApplicationCallController::class, 'index'])->name('application-calls.index');
+    Route::get('application-calls/{slug}', [PublicApplicationCallController::class, 'show'])->name('application-calls.show');
+
+    // Soumission de candidature — jamais de liste/détail public (données
+    // personnelles, voir Admin\ApplicationResource). Throttle anti-abus.
+    Route::post('applications', [PublicApplicationController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('applications.store');
+
+    Route::get('news', [PublicNewsController::class, 'index'])->name('news.index');
+    Route::get('news/{slug}', [PublicNewsController::class, 'show'])->name('news.show');
 });

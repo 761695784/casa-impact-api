@@ -7,11 +7,15 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 /**
- * Seeder incrémental (décision validée le 2026-08-19) : chaque module ajoute
- * ses propres permissions à ce fichier au moment de son implémentation.
+ * Seeder incrémental : chaque module ajoute ses propres permissions à ce
+ * fichier au moment de son implémentation.
  * Module 1 (Administration) : users.*, roles.view.
  * Module 2 (Pages/Domaines) : pages.*, domains.*.
- * Module 3 (Programmes) : programs.*, program-types.* — ajoutées ci-dessous.
+ * Module 3 (Programmes) : programs.*, program-types.*.
+ * Module 4 (Appels à candidatures) : application-calls.*.
+ * Module 5 (Candidatures) : applications.view/update/delete.
+ * Module 6 (Actualités) : news.* — ajoutées ci-dessous, assignées à
+ * `communication` (contenu éditorial, même logique que Pages/Programmes).
  *
  * Rôles fixes et lecture seule côté API : toute évolution de la liste des
  * rôles passe par ce seeder, versionné avec le code, jamais par une
@@ -44,9 +48,23 @@ class RolesAndPermissionsSeeder extends Seeder
             'program-types.create',
             'program-types.update',
             'program-types.delete',
+            'news.view',
+            'news.create',
+            'news.update',
+            'news.delete',
         ];
 
-        foreach ([...$administrationPermissions, ...$contentPermissions] as $permission) {
+        $candidaturePermissions = [
+            'application-calls.view',
+            'application-calls.create',
+            'application-calls.update',
+            'application-calls.delete',
+            'applications.view',
+            'applications.update',
+            'applications.delete',
+        ];
+
+        foreach ([...$administrationPermissions, ...$contentPermissions, ...$candidaturePermissions] as $permission) {
             Permission::findOrCreate($permission, 'web');
         }
 
@@ -55,16 +73,17 @@ class RolesAndPermissionsSeeder extends Seeder
         // pour l'autorisation elle-même, mais /me doit pouvoir en afficher
         // la liste complète — voir AuthController::me()).
         $administrateurPrincipal = Role::findOrCreate('administrateur-principal', 'web');
-        $administrateurPrincipal->syncPermissions([...$administrationPermissions, ...$contentPermissions]);
+        $administrateurPrincipal->syncPermissions([...$administrationPermissions, ...$contentPermissions, ...$candidaturePermissions]);
 
-        // communication : gère les contenus (Pages, Domaines, Programmes, et
-        // plus tard Actualités/Talents/Médiathèque) — aucune permission
-        // d'Administration (users/roles).
+        // communication : gère les contenus (Pages, Domaines, Programmes,
+        // Actualités, et plus tard Talents/Médiathèque) — aucune permission
+        // d'Administration (users/roles) ni de Candidatures.
         $communication = Role::findOrCreate('communication', 'web');
         $communication->syncPermissions($contentPermissions);
 
-        // gestionnaire-candidatures : aucune permission de contenu à ce
-        // stade — recevra les siennes au module Appels à candidatures.
-        Role::findOrCreate('gestionnaire-candidatures', 'web');
+        // gestionnaire-candidatures : gère les appels à candidatures ET les
+        // candidatures elles-mêmes — aucune permission de contenu éditorial.
+        $gestionnaireCandidatures = Role::findOrCreate('gestionnaire-candidatures', 'web');
+        $gestionnaireCandidatures->syncPermissions($candidaturePermissions);
     }
 }

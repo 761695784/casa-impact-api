@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             DomainsSeeder::class,
+            AdminUserSeeder::class,
         ]);
 
         // Aucun utilisateur ni donnée métier de démonstration : conforme à

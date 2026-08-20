@@ -68,4 +68,15 @@ class Program extends Model
     {
         return $query->where('statut', ProgramStatus::Publie->value);
     }
+
+      /**
+     * Ajouté au Module 4 (Appels à candidatures) — un programme peut avoir
+     * plusieurs appels à candidatures (architecturev1.md §C, relation
+     * "1-N ApplicationCall"). Aucune modification du schéma `programs`
+     * n'était nécessaire.
+     */
+        public function applicationCalls()
+    {
+        return $this->hasMany(ApplicationCall::class);
+    }
 }
