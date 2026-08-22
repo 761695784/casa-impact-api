@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api\Public;
 
+use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DomainResource;
 use App\Models\Domain;
 
+#[Group('Domaines — Public')]
 class DomainController extends Controller
 {
     public function index()

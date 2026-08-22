@@ -105,6 +105,23 @@ it("supprime une candidature", function () {
     $this->assertDatabaseMissing('applications', ['id' => $application->id]);
 });
 
+it("permet à gestionnaire-candidatures d'exporter les candidatures en CSV", function () {
+    $user = actingAsGestionnaireCandidaturesForApplications();
+    Application::factory()->count(3)->create();
+
+    $response = $this->actingAs($user)->get('/api/admin/applications/export');
+
+    $response->assertOk()
+        ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+});
+
+it("refuse l'export des candidatures à communication (pas de permission applications.view)", function () {
+    $user = User::factory()->create();
+    $user->assignRole('communication');
+
+    $this->actingAs($user)->get('/api/admin/applications/export')->assertForbidden();
+});
+
 it("permet de télécharger un document associé à une candidature", function () {
     Storage::fake('local');
     $user = actingAsGestionnaireCandidaturesForApplications();

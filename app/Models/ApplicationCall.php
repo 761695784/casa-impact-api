@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\ApplicationCallStatus;
 use App\Enums\Region;
+use App\Traits\HasLocation;
+use App\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -11,6 +13,8 @@ use Illuminate\Support\Str;
 class ApplicationCall extends Model
 {
     use HasFactory;
+    use HasMedia;
+    use HasLocation;
 
     protected $fillable = [
         'titre',
@@ -77,7 +81,7 @@ class ApplicationCall extends Model
         return $query->where('statut', ApplicationCallStatus::Publie->value);
     }
 
-     /**
+    /**
      * Ajouté au Module 5 (Candidatures) — architecturev1.md §C, relation
      * "1-N Application". Aucune modification du schéma `application_calls`
      * n'était nécessaire.
@@ -86,5 +90,4 @@ class ApplicationCall extends Model
     {
         return $this->hasMany(Application::class);
     }
-
 }

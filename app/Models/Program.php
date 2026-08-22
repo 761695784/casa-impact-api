@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\ProgramStatus;
+use App\Traits\HasLocation;
+use App\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -10,6 +12,8 @@ use Illuminate\Support\Str;
 class Program extends Model
 {
     use HasFactory;
+    use HasMedia;
+    use HasLocation;
 
     protected $fillable = [
         'titre',
@@ -69,13 +73,13 @@ class Program extends Model
         return $query->where('statut', ProgramStatus::Publie->value);
     }
 
-      /**
+    /**
      * Ajouté au Module 4 (Appels à candidatures) — un programme peut avoir
      * plusieurs appels à candidatures (architecturev1.md §C, relation
      * "1-N ApplicationCall"). Aucune modification du schéma `programs`
      * n'était nécessaire.
      */
-        public function applicationCalls()
+    public function applicationCalls()
     {
         return $this->hasMany(ApplicationCall::class);
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProgramTypeRequest;
 use App\Http\Requests\Admin\UpdateProgramTypeRequest;
@@ -9,6 +10,7 @@ use App\Http\Resources\ProgramTypeResource;
 use App\Models\ProgramType;
 use Illuminate\Http\Request;
 
+#[Group('Types de programme — Admin')]
 class ProgramTypeController extends Controller
 {
     public function index(Request $request)

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\Public;
 
+use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\NewsResource;
 use App\Models\News;
 use Illuminate\Http\Request;
 
+#[Group('Actualités — Public')]
 class NewsController extends Controller
 {
     /**
@@ -30,6 +32,7 @@ class NewsController extends Controller
     {
         $news = News::query()
             ->published()
+            ->with('media')
             ->where('slug', $slug)
             ->firstOrFail();
 

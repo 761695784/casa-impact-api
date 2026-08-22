@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\Public;
 
+use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PageResource;
 use App\Models\Page;
 use Illuminate\Http\Request;
 
+#[Group('Pages — Public')]
 class PageController extends Controller
 {
     /**

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use Dedoc\Scramble\Attributes\Group;
+use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreNewsRequest;
 use App\Http\Requests\Admin\UpdateNewsRequest;
@@ -9,8 +11,11 @@ use App\Http\Resources\NewsResource;
 use App\Models\News;
 use Illuminate\Http\Request;
 
+#[Group('Actualités — Admin')]
 class NewsController extends Controller
 {
+    use ExportsCsv;
+
     public function index(Request $request)
     {
         $this->authorize('viewAny', News::class);
@@ -47,7 +52,7 @@ class NewsController extends Controller
     {
         $this->authorize('view', $news);
 
-        return new NewsResource($news);
+        return new NewsResource($news->load('media'));
     }
 
     public function update(UpdateNewsRequest $request, News $news)
@@ -70,5 +75,33 @@ class NewsController extends Controller
         $news->delete();
 
         return response()->json(['message' => 'Actualité supprimée avec succès.']);
+    }
+
+    /**
+     * Export CSV — ajouté au Module 14 (Dashboard/export).
+     */
+    public function export(Request $request)
+    {
+        $this->authorize('viewAny', News::class);
+
+        $news = News::query()
+            ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->string('statut')))
+            ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')))
+            ->orderByDesc('updated_at')
+            ->cursor();
+
+        return $this->streamCsv(
+            $news,
+            ['ID', 'Titre', 'Slug', 'Type', 'Statut', 'Créée le'],
+            fn (News $item) => [
+                $item->id,
+                $item->titre,
+                $item->slug,
+                $item->type->value,
+                $item->statut->value,
+                $item->created_at->toDateString(),
+            ],
+            'actualites'
+        );
     }
 }

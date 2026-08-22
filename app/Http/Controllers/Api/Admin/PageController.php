@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePageRequest;
 use App\Http\Requests\Admin\UpdatePageRequest;
@@ -9,6 +10,7 @@ use App\Http\Resources\PageResource;
 use App\Models\Page;
 use Illuminate\Http\Request;
 
+#[Group('Pages — Admin')]
 class PageController extends Controller
 {
     public function index(Request $request)

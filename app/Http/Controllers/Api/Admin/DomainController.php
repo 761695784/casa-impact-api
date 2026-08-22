@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateDomainRequest;
 use App\Http\Resources\DomainResource;
@@ -11,6 +12,7 @@ use App\Models\Domain;
  * Volontairement pas de store()/destroy() : les 6 domaines sont un
  * référentiel fixe seedé par DomainsSeeder (voir DomainPolicy).
  */
+#[Group('Domaines — Admin')]
 class DomainController extends Controller
 {
     public function index()

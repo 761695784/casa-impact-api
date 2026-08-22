@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Admin\RoleResource;
 use Illuminate\Http\Request;
@@ -13,6 +14,7 @@ use Spatie\Permission\Models\Role;
  * store/update/destroy n'existe volontairement (décision reprise du
  * projet précédent, voir architecturev1.md).
  */
+#[Group('Administration — Admin')]
 class RoleController extends Controller
 {
     public function index(Request $request)

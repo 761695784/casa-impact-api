@@ -9,7 +9,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Resource partagée admin/public : un appel à candidatures n'expose aucune
  * donnée personnelle (contrairement à une future ApplicationResource, qui
  * n'existera jamais côté public — voir architecturev1.md §C). La relation
- * `program` n'est incluse que si eager-loadée (whenLoaded).
+ * `program` n'est incluse que si eager-loadée (whenLoaded), de même pour
+ * `media`/`location` ajoutées au Module 12/15.
  *
  * @mixin \App\Models\ApplicationCall
  */
@@ -36,6 +37,8 @@ class ApplicationCallResource extends JsonResource
             'statut' => $this->statut->value,
             'program_id' => $this->program_id,
             'program' => new ProgramResource($this->whenLoaded('program')),
+            'media' => MediaResource::collection($this->whenLoaded('media')),
+            'location' => new LocationResource($this->whenLoaded('location')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

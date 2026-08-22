@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Public;
 
+use Dedoc\Scramble\Attributes\Group;
 use App\Enums\ApplicationCallStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\StoreApplicationRequest;
@@ -15,6 +16,7 @@ use App\Services\ApplicationReferenceGenerator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
+#[Group('Candidatures — Public')]
 class ApplicationController extends Controller
 {
     public function __construct(

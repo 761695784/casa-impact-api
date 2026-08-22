@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\Public;
 
+use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApplicationCallResource;
 use App\Models\ApplicationCall;
 use Illuminate\Http\Request;
 
+#[Group('Appels à candidatures — Public')]
 class ApplicationCallController extends Controller
 {
     /**
@@ -37,7 +39,7 @@ class ApplicationCallController extends Controller
     {
         $applicationCall = ApplicationCall::query()
             ->published()
-            ->with('program')
+            ->with(['program', 'media', 'location'])
             ->where('slug', $slug)
             ->firstOrFail();
 

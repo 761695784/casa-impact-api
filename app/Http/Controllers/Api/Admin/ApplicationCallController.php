@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use Dedoc\Scramble\Attributes\Group;
+use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreApplicationCallRequest;
 use App\Http\Requests\Admin\UpdateApplicationCallRequest;
@@ -9,8 +11,11 @@ use App\Http\Resources\ApplicationCallResource;
 use App\Models\ApplicationCall;
 use Illuminate\Http\Request;
 
+#[Group('Appels à candidatures — Admin')]
 class ApplicationCallController extends Controller
 {
+    use ExportsCsv;
+
     public function index(Request $request)
     {
         $this->authorize('viewAny', ApplicationCall::class);
@@ -49,7 +54,7 @@ class ApplicationCallController extends Controller
     {
         $this->authorize('view', $applicationCall);
 
-        return new ApplicationCallResource($applicationCall->load('program'));
+        return new ApplicationCallResource($applicationCall->load(['program', 'media', 'location']));
     }
 
     public function update(UpdateApplicationCallRequest $request, ApplicationCall $applicationCall)
@@ -72,5 +77,36 @@ class ApplicationCallController extends Controller
         $applicationCall->delete();
 
         return response()->json(['message' => "Appel à candidatures supprimé avec succès."]);
+    }
+
+    /**
+     * Export CSV — ajouté au Module 14 (Dashboard/export).
+     */
+    public function export(Request $request)
+    {
+        $this->authorize('viewAny', ApplicationCall::class);
+
+        $applicationCalls = ApplicationCall::query()
+            ->with('program')
+            ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->string('statut')))
+            ->when($request->filled('region'), fn ($q) => $q->where('region', $request->string('region')))
+            ->orderByDesc('updated_at')
+            ->cursor();
+
+        return $this->streamCsv(
+            $applicationCalls,
+            ['ID', 'Titre', 'Slug', 'Statut', 'Région', 'Programme', 'Places', 'Date limite'],
+            fn (ApplicationCall $applicationCall) => [
+                $applicationCall->id,
+                $applicationCall->titre,
+                $applicationCall->slug,
+                $applicationCall->statut->value,
+                $applicationCall->region?->value,
+                $applicationCall->program?->titre,
+                $applicationCall->nombre_places,
+                $applicationCall->date_limite?->toDateString(),
+            ],
+            'appels-a-candidatures'
+        );
     }
 }
