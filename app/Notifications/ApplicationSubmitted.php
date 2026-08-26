@@ -2,7 +2,6 @@
 
 namespace App\Notifications;
 
-use App\Enums\ApplicationStatus;
 use App\Models\Application;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,10 +10,16 @@ use Illuminate\Notifications\Notification;
 
 /**
  * Envoi de confirmation de candidature — TOUJOURS en file (ShouldQueue),
- * jamais d'envoi inline dans le contrôleur (architecturev1.md §I). Fonctionne
- * dès aujourd'hui avec MAIL_MAILER=log (email loggué plutôt qu'envoyé) — un
- * vrai SMTP sera nécessaire avant la mise en production (point déjà connu,
- * non bloquant pour ce module).
+ * jamais d'envoi inline dans le contrôleur (architecturev1.md §I).
+ *
+ * MIS À JOUR le 2026-08-24 : le contenu passe désormais par une vue Blade
+ * "maison" (emails.applications.received, via emails.layout — logo,
+ * filigrane, signature Casa Impact) au lieu du builder par défaut de
+ * MailMessage — demande explicite de l'utilisateur ("les mails doivent y
+ * avoir le logo de casa impact et des filigranes... et aussi une ou des
+ * signatures"). La logique métier (branche liste d'attente) est
+ * maintenant dans la vue elle-même plutôt que construite ici avec
+ * ->line(), voir le fichier Blade pour le détail.
  */
 class ApplicationSubmitted extends Notification implements ShouldQueue
 {
@@ -31,17 +36,8 @@ class ApplicationSubmitted extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $message = (new MailMessage)
+        return (new MailMessage)
             ->subject('Confirmation de votre candidature — Casa Impact')
-            ->greeting("Bonjour {$this->application->prenom},")
-            ->line("Nous avons bien reçu votre candidature. Votre référence est : {$this->application->reference}.");
-
-        if ($this->application->statut === ApplicationStatus::EnListeAttente) {
-            $message->line("Le nombre de places pour cet appel est atteint : votre candidature a été placée en liste d'attente. Nous vous recontacterons si une place se libère.");
-        } else {
-            $message->line("Votre candidature est en cours d'examen. Nous reviendrons vers vous dès que possible.");
-        }
-
-        return $message->line('Merci de votre intérêt pour Casa Impact.');
+            ->view('emails.applications.received', ['application' => $this->application->loadMissing('applicationCall')]);
     }
 }

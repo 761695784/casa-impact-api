@@ -27,6 +27,10 @@ use Spatie\Permission\Models\Role;
  * Module 16 (Contact) : contact-messages.view/update/delete (pas de
  *   .create : la création est publique et non protégée par policy).
  * Module 14 (Dashboard) : dashboard.view.
+ * Module Adhésion (2026-08-24) : memberships.view/create/update/delete —
+ *   voir plus bas, assignées au seul rôle administrateur-principal (la
+ *   validation d'une adhésion implique de vérifier un vrai paiement Wave,
+ *   décision volontairement plus restrictive que le reste du contenu).
  *
  * Rôles fixes et lecture seule côté API : toute évolution de la liste des
  * rôles passe par ce seeder, versionné avec le code, jamais par une
@@ -99,6 +103,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'applications.delete',
         ];
 
+        // Adhésion (2026-08-24) : volontairement PAS mélangées avec
+        // $contentPermissions ni $candidaturePermissions — voir
+        // MembershipPolicy, assignées au seul administrateur-principal.
+        $membershipPermissions = [
+            'memberships.view',
+            'memberships.create',
+            'memberships.update',
+            'memberships.delete',
+        ];
+
         // Dashboard : compteurs en lecture seule, utile aux trois rôles
         // (chacun voit l'ensemble des chiffres, l'autorisation fine reste
         // au niveau de chaque module pour les actions elles-mêmes).
@@ -110,6 +124,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ...$administrationPermissions,
             ...$contentPermissions,
             ...$candidaturePermissions,
+            ...$membershipPermissions,
             ...$dashboardPermissions,
         ];
 
@@ -127,13 +142,13 @@ class RolesAndPermissionsSeeder extends Seeder
         // communication : gère les contenus (Pages, Domaines, Programmes,
         // Actualités, Talents, Témoignages, Partenaires, Impact, Contact,
         // Médiathèque, Cartographie) + dashboard — aucune permission
-        // d'Administration (users/roles) ni de Candidatures.
+        // d'Administration (users/roles), de Candidatures, ni d'Adhésion.
         $communication = Role::findOrCreate('communication', 'web');
         $communication->syncPermissions([...$contentPermissions, ...$dashboardPermissions]);
 
         // gestionnaire-candidatures : gère les appels à candidatures ET les
         // candidatures elles-mêmes + dashboard — aucune permission de
-        // contenu éditorial.
+        // contenu éditorial ni d'Adhésion (voir décision ci-dessus).
         $gestionnaireCandidatures = Role::findOrCreate('gestionnaire-candidatures', 'web');
         $gestionnaireCandidatures->syncPermissions([...$candidaturePermissions, ...$dashboardPermissions]);
     }

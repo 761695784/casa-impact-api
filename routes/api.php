@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Admin\ImpactIndicatorController as AdminImpactIndic
 use App\Http\Controllers\Api\Admin\ImpactValueController as AdminImpactValueController;
 use App\Http\Controllers\Api\Admin\LocationController as AdminLocationController;
 use App\Http\Controllers\Api\Admin\MediaController as AdminMediaController;
+use App\Http\Controllers\Api\Admin\MembershipController as AdminMembershipController;
 use App\Http\Controllers\Api\Admin\NewsController as AdminNewsController;
 use App\Http\Controllers\Api\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Api\Admin\PartnerController as AdminPartnerController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Api\Public\ContactMessageController as PublicContactMes
 use App\Http\Controllers\Api\Public\DomainController as PublicDomainController;
 use App\Http\Controllers\Api\Public\ImpactIndicatorController as PublicImpactIndicatorController;
 use App\Http\Controllers\Api\Public\MapController;
+use App\Http\Controllers\Api\Public\MembershipController as PublicMembershipController;
 use App\Http\Controllers\Api\Public\NewsController as PublicNewsController;
 use App\Http\Controllers\Api\Public\PageController as PublicPageController;
 use App\Http\Controllers\Api\Public\PartnerController as PublicPartnerController;
@@ -46,8 +48,7 @@ use Illuminate\Support\Facades\Route;
 | Modules 1 à 16 fusionnés ici (Administration, Pages/Domaines, Programmes,
 | Appels à candidatures, Candidatures, Actualités, Médiathèque,
 | Cartographie, Talents, Témoignages, Partenaires, Impact, Dashboard,
-| Contact). Module 17 (tests/sécurisation/doc finale) ne modifie pas ce
-| fichier.
+| Contact) + module Adhésion (2026-08-24, Membership).
 |
 | IMPORTANT — ordre des routes : les routes littérales ('export', 'values',
 | 'contact', etc.) sont déclarées AVANT tout apiResource() dont le
@@ -143,6 +144,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::apiResource('contact-messages', AdminContactMessageController::class)
             ->only(['index', 'show', 'update', 'destroy']);
 
+        // Adhésion (2026-08-24) : CRUD complet — store() ici = saisie
+        // manuelle (membres antérieurs au site), voir
+        // Admin\MembershipController::store() + StoreMembershipManualRequest.
+        // + export CSV + téléchargement de la carte de membre PDF à la demande.
+        Route::get('memberships/export', [AdminMembershipController::class, 'export'])->name('memberships.export');
+        Route::get('memberships/{membership}/card', [AdminMembershipController::class, 'downloadCard'])->name('memberships.card');
+        Route::apiResource('memberships', AdminMembershipController::class);
+
         // Dashboard (Module 14) : compteurs agrégés tous modules confondus.
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     });
@@ -194,4 +203,10 @@ Route::prefix('public')->name('public.')->group(function () {
     Route::post('contact', [PublicContactMessageController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('contact.store');
+
+    // Adhésion (2026-08-24) — soumission publique du formulaire, throttle
+    // anti-spam/abus (même limite que candidatures/contact).
+    Route::post('memberships', [PublicMembershipController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('memberships.store');
 });
