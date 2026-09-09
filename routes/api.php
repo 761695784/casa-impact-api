@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\Admin\ImpactIndicatorController as AdminImpactIndic
 use App\Http\Controllers\Api\Admin\ImpactValueController as AdminImpactValueController;
 use App\Http\Controllers\Api\Admin\LocationController as AdminLocationController;
 use App\Http\Controllers\Api\Admin\MediaController as AdminMediaController;
-use App\Http\Controllers\Api\Admin\MembershipController as AdminMembershipController;
 use App\Http\Controllers\Api\Admin\NewsController as AdminNewsController;
 use App\Http\Controllers\Api\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Api\Admin\PartnerController as AdminPartnerController;
@@ -26,7 +25,6 @@ use App\Http\Controllers\Api\Public\ContactMessageController as PublicContactMes
 use App\Http\Controllers\Api\Public\DomainController as PublicDomainController;
 use App\Http\Controllers\Api\Public\ImpactIndicatorController as PublicImpactIndicatorController;
 use App\Http\Controllers\Api\Public\MapController;
-use App\Http\Controllers\Api\Public\MembershipController as PublicMembershipController;
 use App\Http\Controllers\Api\Public\NewsController as PublicNewsController;
 use App\Http\Controllers\Api\Public\PageController as PublicPageController;
 use App\Http\Controllers\Api\Public\PartnerController as PublicPartnerController;
@@ -48,7 +46,8 @@ use Illuminate\Support\Facades\Route;
 | Modules 1 à 16 fusionnés ici (Administration, Pages/Domaines, Programmes,
 | Appels à candidatures, Candidatures, Actualités, Médiathèque,
 | Cartographie, Talents, Témoignages, Partenaires, Impact, Dashboard,
-| Contact) + module Adhésion (2026-08-24, Membership).
+| Contact). Module 17 (tests/sécurisation/doc finale) ne modifie pas ce
+| fichier.
 |
 | IMPORTANT — ordre des routes : les routes littérales ('export', 'values',
 | 'contact', etc.) sont déclarées AVANT tout apiResource() dont le
@@ -104,10 +103,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('news/export', [AdminNewsController::class, 'export'])->name('news.export');
         Route::apiResource('news', AdminNewsController::class);
 
-        // Médiathèque (Module 12) — attach/detach polymorphique, voir
-        // MediaController::MEDIABLE_MAP pour la liste des types autorisés.
+        // Médiathèque (Module 12, refondue le 2026-09-10 en bibliothèque
+        // partagée réutilisable) — index/show listent la bibliothèque,
+        // store upload (avec attachement immédiat optionnel), update ne
+        // touche qu'aux métadonnées, destroy supprime partout, attach/detach
+        // gèrent le rattachement à une fiche indépendamment du fichier lui
+        // -même. Voir MediaController::MEDIABLE_MAP pour la liste des types
+        // de fiches autorisés.
+        Route::get('media', [AdminMediaController::class, 'index'])->name('media.index');
+        Route::get('media/{media}', [AdminMediaController::class, 'show'])->name('media.show');
         Route::post('media', [AdminMediaController::class, 'store'])->name('media.store');
+        Route::put('media/{media}', [AdminMediaController::class, 'update'])->name('media.update');
         Route::delete('media/{media}', [AdminMediaController::class, 'destroy'])->name('media.destroy');
+        Route::post('media/{media}/attach', [AdminMediaController::class, 'attach'])->name('media.attach');
+        Route::delete('media/{media}/detach', [AdminMediaController::class, 'detach'])->name('media.detach');
 
         // Cartographie (Module 15) — un seul upsert idempotent, voir
         // LocationController::LOCATABLE_MAP pour la liste des types autorisés.
@@ -143,14 +152,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('contact-messages/export', [AdminContactMessageController::class, 'export'])->name('contact-messages.export');
         Route::apiResource('contact-messages', AdminContactMessageController::class)
             ->only(['index', 'show', 'update', 'destroy']);
-
-        // Adhésion (2026-08-24) : CRUD complet — store() ici = saisie
-        // manuelle (membres antérieurs au site), voir
-        // Admin\MembershipController::store() + StoreMembershipManualRequest.
-        // + export CSV + téléchargement de la carte de membre PDF à la demande.
-        Route::get('memberships/export', [AdminMembershipController::class, 'export'])->name('memberships.export');
-        Route::get('memberships/{membership}/card', [AdminMembershipController::class, 'downloadCard'])->name('memberships.card');
-        Route::apiResource('memberships', AdminMembershipController::class);
 
         // Dashboard (Module 14) : compteurs agrégés tous modules confondus.
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -203,10 +204,4 @@ Route::prefix('public')->name('public.')->group(function () {
     Route::post('contact', [PublicContactMessageController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('contact.store');
-
-    // Adhésion (2026-08-24) — soumission publique du formulaire, throttle
-    // anti-spam/abus (même limite que candidatures/contact).
-    Route::post('memberships', [PublicMembershipController::class, 'store'])
-        ->middleware('throttle:10,1')
-        ->name('memberships.store');
 });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Enums\DomainStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -23,6 +24,8 @@ class UpdateProgramTypeRequest extends FormRequest
                 Rule::unique('program_types', 'slug')->ignore($programType?->id),
             ],
             'description' => ['sometimes', 'nullable', 'string'],
+            'statut' => ['sometimes', Rule::enum(DomainStatus::class)],
+            'ordre' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:255'],
         ];
     }
 }

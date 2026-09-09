@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreTestimonialRequest;
@@ -11,7 +10,6 @@ use App\Http\Resources\TestimonialResource;
 use App\Models\Testimonial;
 use Illuminate\Http\Request;
 
-#[Group('Témoignages — Admin')]
 class TestimonialController extends Controller
 {
     use ExportsCsv;
@@ -23,6 +21,11 @@ class TestimonialController extends Controller
         $perPage = min((int) $request->integer('per_page', 15), 100);
 
         $testimonials = Testimonial::query()
+            // Sans ce with('media'), la photo du témoin n'apparaissait ni
+            // dans la grille admin ni, une fois rouvert, dans le formulaire
+            // d'édition (seul show() la chargeait) — même défaut que
+            // NewsController::index() corrigé le 2026-09-09.
+            ->with(['program', 'applicationCall', 'media'])
             ->when($request->filled('search'), fn ($q) => $q->where('auteur', 'like', "%{$request->string('search')}%"))
             ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->string('statut')))
             ->when($request->filled('program_id'), fn ($q) => $q->where('program_id', $request->integer('program_id')))
@@ -61,7 +64,11 @@ class TestimonialController extends Controller
 
         $testimonial->update($request->validated());
 
-        return (new TestimonialResource($testimonial->fresh()))
+        // fresh(['program', 'applicationCall', 'media']) : un simple
+        // fresh() perd les relations chargées, ce qui aurait fait
+        // disparaître la photo rattachée juste avant dans la même requête
+        // de sauvegarde côté frontend (TemoignageFormDialog::syncPhoto).
+        return (new TestimonialResource($testimonial->fresh(['program', 'applicationCall', 'media'])))
             ->additional(['message' => 'Témoignage mis à jour avec succès.']);
     }
 

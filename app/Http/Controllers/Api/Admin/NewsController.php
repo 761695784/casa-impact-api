@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreNewsRequest;
@@ -11,7 +10,6 @@ use App\Http\Resources\NewsResource;
 use App\Models\News;
 use Illuminate\Http\Request;
 
-#[Group('Actualités — Admin')]
 class NewsController extends Controller
 {
     use ExportsCsv;
@@ -23,6 +21,12 @@ class NewsController extends Controller
         $perPage = min((int) $request->integer('per_page', 15), 100);
 
         $news = News::query()
+            // Nécessaire pour que la couverture et l'album (collections
+            // "cover"/"gallery" de la médiathèque) s'affichent déjà dans la
+            // liste admin, pas seulement sur la fiche détail — sinon
+            // rouvrir le formulaire d'édition depuis la liste réinitialise
+            // à tort la sélection de photos à vide côté frontend.
+            ->with('media')
             ->when($request->filled('search'), fn ($q) => $q->where('titre', 'like', "%{$request->string('search')}%"))
             ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->string('statut')))
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')))
@@ -64,7 +68,11 @@ class NewsController extends Controller
         // pris en compte.
         $news->update($request->validated());
 
-        return (new NewsResource($news->fresh()))
+        // fresh('media') : sans quoi whenLoaded('media') dans NewsResource
+        // resterait "non chargé" après un update et l'API omettrait la clé
+        // `media` de la réponse, y compris juste après avoir rattaché une
+        // couverture/galerie côté frontend (ActualiteFormDialog::syncMedia).
+        return (new NewsResource($news->fresh('media')))
             ->additional(['message' => 'Actualité mise à jour avec succès.']);
     }
 

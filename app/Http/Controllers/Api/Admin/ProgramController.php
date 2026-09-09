@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProgramRequest;
@@ -11,7 +10,6 @@ use App\Http\Resources\ProgramResource;
 use App\Models\Program;
 use Illuminate\Http\Request;
 
-#[Group('Programmes — Admin')]
 class ProgramController extends Controller
 {
     use ExportsCsv;
@@ -24,10 +22,12 @@ class ProgramController extends Controller
 
         $programs = Program::query()
             ->with(['domain', 'programType'])
+            ->withCount('applicationCalls')
             ->when($request->filled('search'), fn ($q) => $q->where('titre', 'like', "%{$request->string('search')}%"))
             ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->string('statut')))
             ->when($request->filled('domain_id'), fn ($q) => $q->where('domain_id', $request->integer('domain_id')))
             ->when($request->filled('program_type_id'), fn ($q) => $q->where('program_type_id', $request->integer('program_type_id')))
+            ->when($request->filled('region'), fn ($q) => $q->where('region', $request->string('region')))
             ->orderByDesc('updated_at')
             ->paginate($perPage);
 
@@ -54,6 +54,8 @@ class ProgramController extends Controller
     {
         $this->authorize('view', $program);
 
+        $program->loadCount('applicationCalls');
+
         return new ProgramResource($program->load(['domain', 'programType', 'media', 'location']));
     }
 
@@ -66,7 +68,10 @@ class ProgramController extends Controller
         // compte (pas de régénération automatique sur changement de titre).
         $program->update($request->validated());
 
-        return (new ProgramResource($program->fresh()->load(['domain', 'programType'])))
+        $updated = $program->fresh()->load(['domain', 'programType']);
+        $updated->loadCount('applicationCalls');
+
+        return (new ProgramResource($updated))
             ->additional(['message' => 'Programme mis à jour avec succès.']);
     }
 

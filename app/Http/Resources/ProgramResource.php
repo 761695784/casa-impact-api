@@ -24,6 +24,9 @@ class ProgramResource extends JsonResource
             'titre' => $this->titre,
             'slug' => $this->slug,
             'description' => $this->description,
+            'resume' => $this->resume,
+            'region' => $this->region?->value,
+            'localisation' => $this->localisation,
             'statut' => $this->statut->value,
             'domain_id' => $this->domain_id,
             'program_type_id' => $this->program_type_id,
@@ -31,6 +34,12 @@ class ProgramResource extends JsonResource
             'program_type' => new ProgramTypeResource($this->whenLoaded('programType')),
             'date_debut' => $this->date_debut?->toDateString(),
             'date_fin' => $this->date_fin?->toDateString(),
+            'beneficiaires_count' => $this->beneficiaires_count,
+            // Présent uniquement quand la requête amont a fait
+            // ->withCount('applicationCalls') (voir ProgramController) —
+            // whenCounted() omet proprement la clé sinon plutôt que de
+            // renvoyer null ou déclencher une requête N+1.
+            'appels_count' => $this->whenCounted('applicationCalls'),
             'media' => MediaResource::collection($this->whenLoaded('media')),
             'location' => new LocationResource($this->whenLoaded('location')),
             'created_at' => $this->created_at,

@@ -19,6 +19,11 @@ class ProgramTypeResource extends JsonResource
             'nom' => $this->nom,
             'slug' => $this->slug,
             'description' => $this->description,
+            'statut' => $this->statut?->value,
+            'ordre' => $this->ordre,
+            // Présent uniquement quand la requête amont a fait
+            // ->withCount('programs') (voir ProgramTypeController).
+            'programmes_count' => $this->whenCounted('programs'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

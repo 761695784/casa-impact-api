@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Api\Public;
 
-use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\NewsResource;
 use App\Models\News;
 use Illuminate\Http\Request;
 
-#[Group('Actualités — Public')]
 class NewsController extends Controller
 {
     /**
@@ -20,6 +18,11 @@ class NewsController extends Controller
         $perPage = min((int) $request->integer('per_page', 15), 100);
 
         $news = News::query()
+            // Sans ce with('media'), whenLoaded('media') dans NewsResource
+            // ne renvoie jamais la couverture sur la liste publique (seule
+            // la fiche détail, show(), la chargeait) — la vitrine retombait
+            // alors sur une image de repli identique pour chaque article.
+            ->with('media')
             ->published()
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')))
             ->orderByDesc('created_at')

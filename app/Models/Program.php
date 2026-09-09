@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProgramStatus;
+use App\Enums\Region;
 use App\Traits\HasLocation;
 use App\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,19 +20,25 @@ class Program extends Model
         'titre',
         'slug',
         'description',
+        'resume',
+        'region',
+        'localisation',
         'statut',
         'domain_id',
         'program_type_id',
         'date_debut',
         'date_fin',
+        'beneficiaires_count',
     ];
 
     protected function casts(): array
     {
         return [
             'statut' => ProgramStatus::class,
+            'region' => Region::class,
             'date_debut' => 'date',
             'date_fin' => 'date',
+            'beneficiaires_count' => 'integer',
         ];
     }
 
