@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\StoreContactMessageRequest;
 use App\Models\ContactMessage;
 use App\Notifications\ContactMessageReceived;
+use App\Notifications\NewContactMessageNotification;
 use Illuminate\Support\Facades\Notification;
 
 /**
@@ -15,11 +16,13 @@ use Illuminate\Support\Facades\Notification;
  * confirmation. `statut` est toujours forcé à `nouveau`, quelle que soit la
  * donnée envoyée par le client.
  *
- * MIS À JOUR le 2026-08-24 : envoie désormais ContactMessageReceived
- * (réponse automatique brandée) après la création — demande explicite de
- * l'utilisateur. Pour les emails envoyés DIRECTEMENT à l'adresse Casa
- * Impact (hors formulaire du site), voir le README : la réponse
- * automatique passe par le répondeur natif de Gmail, pas par ce code.
+ * MIS À JOUR le 2026-08-24 : envoie ContactMessageReceived (réponse
+ * automatique brandée) au visiteur après la création.
+ *
+ * MIS À JOUR le 2026-09-10 : envoie EN PLUS NewContactMessageNotification
+ * à l'adresse officielle Casa Impact (config('casaimpact.signature_email'))
+ * — demande explicite de l'utilisateur, pour ne plus dépendre uniquement
+ * de la consultation du panneau admin.
  */
 class ContactMessageController extends Controller
 {
@@ -30,7 +33,11 @@ class ContactMessageController extends Controller
 
         $contactMessage = ContactMessage::create($data);
 
-        Notification::route('mail', $contactMessage->email)->notify(new ContactMessageReceived($contactMessage));
+        Notification::route('mail', $contactMessage->email)
+            ->notify(new ContactMessageReceived($contactMessage));
+
+        Notification::route('mail', config('casaimpact.signature_email'))
+            ->notify(new NewContactMessageNotification($contactMessage));
 
         return response()->json([
             'message' => 'Votre message a bien été envoyé. Nous vous répondrons dans les meilleurs délais.',

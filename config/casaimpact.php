@@ -26,12 +26,11 @@ return [
 
     'social_links_url' => env('CASAIMPACT_SOCIAL_LINKS_URL', 'https://lnk.bio/casa_impact'),
 
-    // Nullable tant que le numéro officiel n'a pas été communiqué (voir
-    // message de l'utilisateur du 2026-08-24 : "je te donnerai le numero
-    // officiel... quand je l'aurai reçu") — la signature d'email gère déjà
-    // son absence (voir resources/views/emails/layout.blade.php), aucun
-    // blocage à livrer sans cette valeur.
-    'signature_phone' => env('CASAIMPACT_SIGNATURE_PHONE'),
+    // Numéro officiel communiqué par l'utilisateur le 2026-09-10 (auparavant
+    // laissé vide, voir l'historique de cette clé) — la signature d'email
+    // l'affiche désormais par défaut, tout en restant surchargeable via
+    // CASAIMPACT_SIGNATURE_PHONE si ce numéro change un jour.
+    'signature_phone' => env('CASAIMPACT_SIGNATURE_PHONE', '+221 78 103 30 63'),
 
     'signature_email' => env('CASAIMPACT_SIGNATURE_EMAIL', 'casaimpactF0rt@gmail.com'),
 

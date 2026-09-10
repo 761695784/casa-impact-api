@@ -13,25 +13,15 @@ return new class extends Migration
             $table->string('titre');
             $table->string('slug')->unique();
             $table->longText('description')->nullable();
-            // Valeur contrôlée côté application (App\Enums\ProgramStatus),
-            // pas d'ENUM SQL — cohérent avec architecturev1.md §B.
+            $table->string('resume')->nullable();
+            $table->string('region')->nullable();
+            $table->string('localisation')->nullable();
             $table->string('statut')->default('brouillon');
-
-            // Domaine verrouillé (Module 2) : jamais supprimé via l'API,
-            // mais on garde restrictOnDelete en défense en profondeur au
-            // niveau DB plutôt que de faire confiance uniquement à l'absence
-            // de route DELETE.
             $table->foreignId('domain_id')->constrained('domains')->restrictOnDelete();
-
-            // ProgramType EST supprimable via l'admin (table éditable) :
-            // restrictOnDelete empêche la suppression d'un type encore
-            // utilisé par un programme — ProgramTypeController::destroy()
-            // vérifie aussi explicitement en amont pour renvoyer un 409
-            // JSON propre plutôt que de laisser remonter l'exception SQL.
             $table->foreignId('program_type_id')->constrained('program_types')->restrictOnDelete();
-
             $table->date('date_debut')->nullable();
             $table->date('date_fin')->nullable();
+            $table->unsignedInteger('beneficiaires_count')->nullable();
             $table->timestamps();
 
             $table->index('statut');

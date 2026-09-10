@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Api\Public;
 
-use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TalentResource;
 use App\Models\Talent;
 use Illuminate\Http\Request;
 
-#[Group('Talents — Public')]
 class TalentController extends Controller
 {
     /**
@@ -21,6 +19,7 @@ class TalentController extends Controller
 
         $talents = Talent::query()
             ->published()
+            ->with(['domain', 'media'])
             ->when($request->filled('region'), fn ($q) => $q->where('region', $request->string('region')))
             ->when($request->filled('domain_id'), fn ($q) => $q->where('domain_id', $request->integer('domain_id')))
             ->orderByDesc('created_at')

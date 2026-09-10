@@ -20,6 +20,10 @@ class ApplicationCall extends Model
         'titre',
         'slug',
         'description',
+        // Résumé accrocheur affiché dans les cartes/aperçus admin et sur la
+        // page publique — ajouté pour aligner le backend sur le formulaire
+        // admin déjà conçu côté frontend (même logique que Program::resume).
+        'resume',
         'objectifs',
         'public_cible',
         'region',
@@ -44,6 +48,11 @@ class ApplicationCall extends Model
             'date_fin' => 'date',
             'date_limite' => 'date',
             'nombre_places' => 'integer',
+            // Depuis l'alignement avec le formulaire admin, chaque entrée
+            // est un objet {cle, libelle, requis, formats?, taille_max?}
+            // plutôt qu'une simple chaîne — voir StoreApplicationCallRequest
+            // et App\Http\Requests\Public\StoreApplicationRequest (Module 5)
+            // qui lit désormais `cle`/`requis` sur chaque entrée.
             'documents_requis' => 'array',
         ];
     }

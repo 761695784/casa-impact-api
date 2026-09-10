@@ -12,11 +12,10 @@ use Illuminate\Support\Str;
  * aucune liste officielle et fermée n'existe dans le brief métier (décision
  * validée le 2026-08-19) — CRUD complet exposé côté admin.
  *
- * `statut`/`ordre` ajoutés le 2026-09-09 : l'admin désactive un type
- * (actif/inactif, même enum que Domain) plutôt que de le supprimer par
- * défaut — la suppression définitive (`destroy()`, avec 409 si le type est
- * encore utilisé par un programme) reste une action distincte, toujours
- * disponible en parallèle.
+ * `statut`/`ordre` : l'admin désactive un type (actif/inactif, même enum
+ * que Domain) plutôt que de le supprimer par défaut — la suppression
+ * définitive (`destroy()`, avec 409 si le type est encore utilisé par un
+ * programme) reste une action distincte, toujours disponible en parallèle.
  */
 class ProgramType extends Model
 {

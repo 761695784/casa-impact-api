@@ -8,37 +8,25 @@ use Illuminate\Database\Seeder;
 /**
  * Les 6 domaines d'intervention proviennent du brief métier officiel
  * (section "Nos domaines"). `nom`, `slug`, `icone` et `description` sont
- * désormais tous renseignés dès le seed.
+ * tous renseignés dès le seed.
  *
- * Les textes de `description` ne sont PAS un texte institutionnel inventé
+ * Les textes de `description` ne sont pas un texte institutionnel inventé
  * à part : ils sont composés à partir des 4 "axes stratégiques" déjà
- * définis pour chaque domaine dans `domainDetailsMetadata` côté frontend
- * (`lib/domain-visuals.tsx`) — mêmes intitulés, mêmes formulations. C'est
- * ce contenu-là (déjà validé et affiché sur la page de détail de chaque
- * domaine) qui sert de source, reformulé en un paragraphe continu pour le
- * champ `description` consommé par la page publique et par l'admin.
+ * définis pour chaque domaine côté frontend (`lib/domain-visuals.tsx`) —
+ * mêmes intitulés, mêmes formulations, reformulés en un paragraphe continu.
  *
- * `description` reste normalement modifiable ensuite depuis l'admin
- * (`DomaineEditDialog`), mais le seed n'affiche plus de bloc vide par
- * défaut.
- *
- * IMPORTANT — correspondance des slugs :
- * Le slug de chaque domaine est fixé explicitement ci-dessous (et non plus
- * dérivé de `nom` via `Str::slug()`). L'ancienne version du seeder générait
- * le slug à partir du nom (ex. "Jeunesse & Leadership" → "jeunesse-leadership"),
- * ce qui ne correspondait à AUCUNE des clés attendues côté frontend dans
- * `lib/domain-visuals.tsx` (ex. "jeunesse-et-leadership"). Résultat : la
- * page de détail de chaque domaine retombait systématiquement sur l'icône,
- * l'image et les 4 axes stratégiques par défaut de `getDomainMetadata()`,
- * au lieu des visuels et contenus spécifiquement conçus pour ce domaine.
- * Les slugs ci-dessous sont donc alignés caractère pour caractère sur les
- * clés de `domainVisuals` / `domainDetailsMetadata` côté frontend.
+ * IMPORTANT — correspondance des slugs : le slug de chaque domaine est fixé
+ * explicitement ci-dessous (et non dérivé de `nom` via `Str::slug()`), pour
+ * être aligné caractère pour caractère sur les clés attendues côté
+ * frontend dans `lib/domain-visuals.tsx` (ex. "jeunesse-et-leadership").
+ * Un slug mal aligné ferait retomber la page de détail du domaine sur
+ * l'icône/l'image/les 4 axes par défaut de `getDomainMetadata()`, au lieu
+ * des visuels spécifiquement conçus pour ce domaine.
  *
  * `slug` reste volontairement absent de `Domain::$fillable` (voir le
  * modèle) : on utilise `firstOrNew()` + `forceFill()` plutôt que
  * `updateOrCreate()` pour pouvoir fixer ce champ nous-mêmes depuis ce
- * seeder de confiance, sans dépendre de l'assignation de masse ni risquer
- * qu'il soit silencieusement ignoré à la création.
+ * seeder de confiance, sans dépendre de l'assignation de masse.
  *
  * Rejouable sans dupliquer les 6 domaines (`firstOrNew` sur le slug).
  */

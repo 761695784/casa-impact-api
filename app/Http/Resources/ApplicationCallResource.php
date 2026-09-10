@@ -23,6 +23,7 @@ class ApplicationCallResource extends JsonResource
             'titre' => $this->titre,
             'slug' => $this->slug,
             'description' => $this->description,
+            'resume' => $this->resume,
             'objectifs' => $this->objectifs,
             'public_cible' => $this->public_cible,
             'region' => $this->region?->value,

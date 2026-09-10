@@ -66,8 +66,7 @@ class ProgramTypeController extends Controller
         $this->authorize('delete', $programType);
 
         // 409 explicite plutôt que de laisser remonter l'exception SQL du
-        // restrictOnDelete défini en migration — cohérent avec la
-        // convention d'erreurs "409 conflit métier" d'architecturev1.md §F.
+        // restrictOnDelete défini en migration.
         if ($programType->programs()->exists()) {
             abort(409, "Ce type de programme est utilisé par au moins un programme et ne peut pas être supprimé.");
         }

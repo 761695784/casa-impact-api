@@ -28,6 +28,8 @@ class StoreApplicationRequest extends FormRequest
             'region' => ['required', Rule::enum(Region::class)],
             'lieu' => ['nullable', 'string', 'max:255'],
 
+            // Rendus obligatoires (décision de l'utilisateur, 2026-08-20 —
+            // à l'origine nullable dans ma proposition initiale).
             'tranche_age' => ['required', 'string', 'max:50'],
             'niveau_etudes' => ['required', 'string', 'max:255'],
             'situation_professionnelle' => ['nullable', 'string', 'max:255'],
@@ -49,6 +51,13 @@ class StoreApplicationRequest extends FormRequest
      * `ApplicationCall.documents_requis` sont bien fournis — règle métier
      * propre à l'appel visé, pas exprimable comme une règle Laravel
      * statique puisqu'elle dépend d'une autre ressource.
+     *
+     * Depuis l'alignement du formulaire admin (chaque entrée est désormais
+     * un objet {cle, libelle, requis, formats?, taille_max?} plutôt qu'une
+     * simple chaîne), on lit `cle` et on ne bloque que les documents dont
+     * `requis` vaut true — une ancienne entrée stockée en simple chaîne
+     * (données antérieures à cet alignement) reste traitée comme
+     * obligatoire, pour ne rien changer au comportement déjà en place.
      */
     public function withValidator(Validator $validator): void
     {
@@ -62,11 +71,23 @@ class StoreApplicationRequest extends FormRequest
             $applicationCall = ApplicationCall::find($applicationCallId);
             $documentsRequis = $applicationCall?->documents_requis ?? [];
 
-            foreach ($documentsRequis as $type) {
-                if (! $this->hasFile("documents.{$type}")) {
+            foreach ($documentsRequis as $document) {
+                if (is_array($document)) {
+                    $cle = $document['cle'] ?? null;
+                    $estRequis = $document['requis'] ?? true;
+                } else {
+                    $cle = $document;
+                    $estRequis = true;
+                }
+
+                if (! $cle || ! $estRequis) {
+                    continue;
+                }
+
+                if (! $this->hasFile("documents.{$cle}")) {
                     $validator->errors()->add(
-                        "documents.{$type}",
-                        "Le document « {$type} » est requis pour cet appel à candidatures."
+                        "documents.{$cle}",
+                        "Le document « {$cle} » est requis pour cet appel à candidatures."
                     );
                 }
             }

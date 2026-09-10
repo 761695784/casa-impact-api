@@ -15,14 +15,14 @@
         Nous vous remercions pour votre demande d'adhésion à <strong>Casa Impact</strong>. Votre dossier a bien été enregistré sous le numéro :
     </p>
 
-    <p style="margin:0 0 16px; font-size:20px; font-weight:bold; color:#163a2b;">{{ $membership->numero_membre }}</p>
+    <p style="margin:0 0 16px; font-size:20px; font-weight:bold; color:#02542D;">{{ $membership->numero_membre }}</p>
 
     <p style="margin:0 0 16px;">
         Pour finaliser votre adhésion, il vous reste une dernière étape : le règlement de la cotisation d'un montant de
         <strong>{{ config('casaimpact.wave_amount') }}</strong> via <strong>Wave</strong>, au numéro suivant :
     </p>
 
-    <p style="margin:0 0 16px; font-size:18px; font-weight:bold; color:#163a2b;">{{ config('casaimpact.wave_number') }}</p>
+    <p style="margin:0 0 16px; font-size:18px; font-weight:bold; color:#02542D;">{{ config('casaimpact.wave_number') }}</p>
 
     <p style="margin:0 0 16px;">
         Une fois le paiement effectué, merci de nous envoyer la <strong>capture d'écran de la transaction</strong> par WhatsApp au même numéro

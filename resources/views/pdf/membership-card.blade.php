@@ -18,16 +18,16 @@
     html, body {
         margin: 0;
         padding: 0;
-        width: 680px;
-        height: 383px;
+        width: 680pt;
+        height: 383pt;
         font-family: "Helvetica", "DejaVu Sans", sans-serif;
         background-color: #f7f6f2;
     }
 
     .card {
         position: relative;
-        width: 680px;
-        height: 383px;
+        width: 680pt;
+        height: 383pt;
         overflow: hidden;
     }
 
@@ -37,9 +37,9 @@
        les images dans certaines versions de DomPDF). */
     .watermark {
         position: absolute;
-        top: 30px;
-        right: 40px;
-        width: 340px;
+        top: 30pt;
+        right: 40pt;
+        width: 340pt;
     }
 
     /* Bandeau vert foncé à gauche, texte "Carte de membre" en rotation. */
@@ -47,104 +47,104 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 90px;
-        height: 383px;
-        background-color: #163a2b;
+        width: 90pt;
+        height: 383pt;
+        background-color: #02542D;
     }
 
     .sidebar-text {
         position: absolute;
-        top: 155px;
-        left: -110px;
-        width: 320px;
+        top: 155pt;
+        left: -110pt;
+        width: 320pt;
         text-align: center;
         transform: rotate(-90deg);
         color: #ffffff;
-        font-size: 34px;
+        font-size: 34pt;
         font-weight: bold;
     }
 
     .logo {
         position: absolute;
-        top: 28px;
-        left: 118px;
-        width: 190px;
+        top: 28pt;
+        left: 118pt;
+        width: 190pt;
     }
 
     .id-pill {
         position: absolute;
-        top: 34px;
-        right: 36px;
-        background-color: #163a2b;
+        top: 34pt;
+        right: 36pt;
+        background-color: #02542D;
         color: #ffffff;
         font-weight: bold;
-        font-size: 20px;
-        padding: 10px 26px;
-        border-radius: 22px;
+        font-size: 20pt;
+        padding: 10pt 26pt;
+        border-radius: 22pt;
     }
 
     .photo-box {
         position: absolute;
-        top: 118px;
-        left: 118px;
-        width: 148px;
-        height: 182px;
-        border: 3px solid #d3992e;
+        top: 150pt;
+        left: 118pt;
+        width: 148pt;
+        height: 182pt;
+        border: 3pt solid #F2A20D;
         background-color: #ffffff;
         text-align: center;
     }
 
     .photo-box img {
-        width: 148px;
-        height: 182px;
+        width: 148pt;
+        height: 182pt;
         object-fit: cover;
     }
 
     .fields {
         position: absolute;
-        top: 128px;
-        left: 300px;
-        width: 340px;
+        top: 160pt;
+        left: 300pt;
+        width: 340pt;
     }
 
     .field-nom {
-        color: #163a2b;
-        font-size: 30px;
+        color: #02542D;
+        font-size: 30pt;
         font-weight: bold;
-        margin-bottom: 26px;
+        margin-bottom: 26pt;
     }
 
     .field-statut {
-        color: #d3992e;
-        font-size: 19px;
+        color: #F2A20D;
+        font-size: 19pt;
         font-weight: bold;
-        margin-bottom: 2px;
+        margin-bottom: 2pt;
     }
 
     .field-region {
-        color: #d3992e;
-        font-size: 32px;
+        color: #F2A20D;
+        font-size: 32pt;
         font-weight: bold;
-        margin-bottom: 18px;
+        margin-bottom: 18pt;
     }
 
     .field-date-label {
         color: #6b6b63;
-        font-size: 12px;
+        font-size: 12pt;
     }
 
     .field-date {
         color: #3c3c36;
-        font-size: 16px;
+        font-size: 16pt;
         font-weight: bold;
     }
 
     .footer {
         position: absolute;
-        bottom: 22px;
-        right: 40px;
-        color: #163a2b;
-        font-size: 14px;
+        bottom: 22pt;
+        right: 40pt;
+        color: #02542D;
+        font-size: 14pt;
         font-weight: bold;
         font-style: italic;
     }

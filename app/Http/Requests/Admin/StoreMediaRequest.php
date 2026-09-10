@@ -26,7 +26,7 @@ class StoreMediaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'fichier' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,webp,pdf'],
+            'fichier' => ['required', 'file', 'max:10240', 'mimes:jpg,jpeg,png,webp,pdf'],
             'nom' => ['nullable', 'string', 'max:255'],
             'alt' => ['nullable', 'string', 'max:255'],
             'legende' => ['nullable', 'string', 'max:255'],

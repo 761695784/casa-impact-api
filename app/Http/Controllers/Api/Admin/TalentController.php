@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreTalentRequest;
@@ -11,7 +10,6 @@ use App\Http\Resources\TalentResource;
 use App\Models\Talent;
 use Illuminate\Http\Request;
 
-#[Group('Talents — Admin')]
 class TalentController extends Controller
 {
     use ExportsCsv;
@@ -23,7 +21,7 @@ class TalentController extends Controller
         $perPage = min((int) $request->integer('per_page', 15), 100);
 
         $talents = Talent::query()
-            ->with('domain')
+            ->with(['domain', 'media'])
             ->when($request->filled('search'), fn ($q) => $q->where('nom', 'like', "%{$request->string('search')}%"))
             ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->string('statut')))
             ->when($request->filled('region'), fn ($q) => $q->where('region', $request->string('region')))
@@ -67,7 +65,7 @@ class TalentController extends Controller
         // changement de nom).
         $talent->update($request->validated());
 
-        return (new TalentResource($talent->fresh()->load('domain')))
+        return (new TalentResource($talent->fresh()->load(['domain', 'media'])))
             ->additional(['message' => 'Talent mis à jour avec succès.']);
     }
 

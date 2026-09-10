@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Api\Public;
 
-use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProgramResource;
 use App\Models\Program;
 use Illuminate\Http\Request;
 
-#[Group('Programmes — Public')]
 class ProgramController extends Controller
 {
     /**
@@ -23,7 +21,7 @@ class ProgramController extends Controller
 
         $programs = Program::query()
             ->published()
-            ->with(['domain', 'programType'])
+            ->with(['domain', 'programType', 'media'])
             ->when(
                 $request->filled('domain'),
                 fn ($q) => $q->whereHas('domain', fn ($d) => $d->where('slug', $request->string('domain')))

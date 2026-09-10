@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Membership;
+use App\Services\MembershipCardService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -17,18 +18,23 @@ use Illuminate\Notifications\Notification;
  * le lien du groupe WhatsApp et le lien des réseaux sociaux — contenu
  * calé sur l'exemple réel fourni par l'utilisateur le 2026-08-24.
  *
- * IMPORTANT : le constructeur reçoit le PDF déjà généré (bytes), pas le
- * service lui-même — MembershipCardService dépend de la façade DomPDF
- * (`Barryvdh\DomPDF\Facade\Pdf`), qui n'est PAS sérialisable proprement
- * pour la file d'attente. Générer la carte avant de dispatcher la
- * notification (voir contrôleur) évite tout problème de sérialisation
- * d'un job ShouldQueue.
+ * IMPORTANT (corrigé le 2026-09-10) : la carte PDF est régénérée ICI, dans
+ * toMail(), au moment de l'envoi réel — PAS passée en paramètre du
+ * constructeur. Une première version stockait le PDF déjà généré (bytes
+ * bruts) comme propriété publique du job : comme cette notification est
+ * `ShouldQueue`, Laravel sérialise tout son état pour le stocker en file
+ * d'attente, et sérialiser une chaîne binaire (PDF) dans l'enveloppe JSON
+ * du job échoue ("Unable to JSON encode payload... Malformed UTF-8
+ * characters") puisque du binaire brut n'est pas de l'UTF-8 valide.
+ * `MembershipCardService` lui-même reste injectable sans problème (aucune
+ * propriété binaire, juste un service sans état résolu via le conteneur à
+ * l'exécution du job, jamais sérialisé).
  */
 class MembershipValidated extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public Membership $membership, public string $cardPdfContent)
+    public function __construct(public Membership $membership)
     {
     }
 
@@ -39,11 +45,13 @@ class MembershipValidated extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        $cardPdfContent = app(MembershipCardService::class)->generate($this->membership);
+
         return (new MailMessage)
             ->subject('Bienvenue chez Casa Impact — votre adhésion est validée')
             ->view('emails.memberships.validated', ['membership' => $this->membership])
             ->attachData(
-                $this->cardPdfContent,
+                $cardPdfContent,
                 "carte-membre-{$this->membership->numero_membre}.pdf",
                 ['mime' => 'application/pdf']
             );

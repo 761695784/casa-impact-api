@@ -1,5 +1,8 @@
 <?php
 
+// En haut du fichier, avec les autres "use"
+use App\Http\Controllers\Api\Admin\MembershipController as AdminMembershipController;
+use App\Http\Controllers\Api\Public\MembershipController as PublicMembershipController;
 use App\Http\Controllers\Api\Admin\ApplicationCallController as AdminApplicationCallController;
 use App\Http\Controllers\Api\Admin\ApplicationController as AdminApplicationController;
 use App\Http\Controllers\Api\Admin\AuthController;
@@ -71,6 +74,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
 
         Route::apiResource('pages', AdminPageController::class);
+
+        // Dans le groupe Route::prefix('admin')->middleware('auth:sanctum'), avec les autres apiResource
+        Route::get('memberships/export', [AdminMembershipController::class, 'export'])->name('memberships.export');
+        Route::get('memberships/{membership}/card', [AdminMembershipController::class, 'downloadCard'])->name('memberships.card');
+        Route::apiResource('memberships', AdminMembershipController::class);
 
         // Pas d'apiResource ici : domaines = référentiel fixe, seulement
         // index/show/update exposés (voir DomainController, DomainPolicy).
@@ -172,6 +180,10 @@ Route::prefix('public')->name('public.')->group(function () {
 
     Route::get('application-calls', [PublicApplicationCallController::class, 'index'])->name('application-calls.index');
     Route::get('application-calls/{slug}', [PublicApplicationCallController::class, 'show'])->name('application-calls.show');
+
+    Route::post('memberships', [PublicMembershipController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('memberships.store');
 
     // Soumission de candidature — jamais de liste/détail public (données
     // personnelles, voir Admin\ApplicationResource). Throttle anti-abus.

@@ -98,8 +98,10 @@ class MembershipController extends Controller
         ]);
 
         if ($sendWelcomeEmail) {
-            $cardPdf = $this->cardService->generate($membership);
-            Notification::route('mail', $membership->email)->notify(new MembershipValidated($membership, $cardPdf));
+            // La carte n'est PAS générée ici : voir MembershipValidated, qui
+            // la régénère lui-même au moment de l'envoi pour éviter de
+            // faire transiter du PDF binaire par la file d'attente.
+            Notification::route('mail', $membership->email)->notify(new MembershipValidated($membership));
         }
 
         return (new MembershipResource($membership))
@@ -148,8 +150,8 @@ class MembershipController extends Controller
         });
 
         if ($devientValidee) {
-            $cardPdf = $this->cardService->generate($membership->fresh());
-            Notification::route('mail', $membership->email)->notify(new MembershipValidated($membership->fresh(), $cardPdf));
+            // Idem : pas de génération de carte ici, voir MembershipValidated.
+            Notification::route('mail', $membership->email)->notify(new MembershipValidated($membership->fresh()));
         }
 
         return (new MembershipResource($membership->fresh()))

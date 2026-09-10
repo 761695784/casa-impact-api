@@ -8,10 +8,10 @@ use Illuminate\Database\Seeder;
 /**
  * Contrairement à DomainsSeeder, ProgramType n'est pas un référentiel
  * verrouillé (voir ProgramType::class) : cette liste sert de point de
- * départ éditorial cohérent avec les 4 modalités déjà annoncées dans
- * l'admin (app/admin/(protected)/types-de-programme/page.tsx : "Formation,
- * Accompagnement, Événements, Bourses"), pas une contrainte fermée —
- * l'admin peut en ajouter, modifier ou désactiver librement via le CRUD.
+ * départ éditorial cohérent avec les 4 modalités déjà annoncées côté
+ * frontend admin ("Formation, Accompagnement, Événements, Bourses"), pas
+ * une contrainte fermée — l'admin peut en ajouter, modifier ou désactiver
+ * librement via le CRUD.
  *
  * Comme pour DomainsSeeder : `slug` n'est pas dans $fillable
  * (ProgramType::$fillable), donc firstOrNew()+forceFill() plutôt que

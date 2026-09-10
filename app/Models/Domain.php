@@ -38,13 +38,11 @@ class Domain extends Model
         return $query->where('statut', DomainStatus::Actif->value);
     }
 
-        /**
-     * Ajouté au Module 3 (Programmes) — un domaine verrouillé peut quand
-     * même être référencé par de nombreux programmes ; aucune modification
-     * du schéma domains n'était nécessaire (voir architecturev1.md §C,
-     * relation "1-N Program").
+    /**
+     * Un domaine verrouillé peut quand même être référencé par de nombreux
+     * programmes (relation "1-N Program", voir architecturev1.md §C).
      */
-        public function programs()
+    public function programs()
     {
         return $this->hasMany(Program::class);
     }

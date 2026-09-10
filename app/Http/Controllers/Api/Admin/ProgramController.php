@@ -21,7 +21,7 @@ class ProgramController extends Controller
         $perPage = min((int) $request->integer('per_page', 15), 100);
 
         $programs = Program::query()
-            ->with(['domain', 'programType'])
+            ->with(['domain', 'programType', 'media'])
             ->withCount('applicationCalls')
             ->when($request->filled('search'), fn ($q) => $q->where('titre', 'like', "%{$request->string('search')}%"))
             ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->string('statut')))
@@ -68,7 +68,7 @@ class ProgramController extends Controller
         // compte (pas de régénération automatique sur changement de titre).
         $program->update($request->validated());
 
-        $updated = $program->fresh()->load(['domain', 'programType']);
+        $updated = $program->fresh()->load(['domain', 'programType', 'media', 'location']);
         $updated->loadCount('applicationCalls');
 
         return (new ProgramResource($updated))
