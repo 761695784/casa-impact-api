@@ -38,6 +38,13 @@ class ApplicationCallResource extends JsonResource
             'statut' => $this->statut->value,
             'program_id' => $this->program_id,
             'program' => new ProgramResource($this->whenLoaded('program')),
+            // Présent uniquement quand la requête amont a fait
+            // ->withCount('applications') / ->loadCount('applications') —
+            // voir Admin\ApplicationCallController (correctif du
+            // 2026-09-14 : le compteur "X reçue(s)" affichait toujours 0
+            // côté admin faute de ce withCount). Même principe que
+            // ProgramResource::appels_count.
+            'candidatures_count' => $this->whenCounted('applications'),
             'media' => MediaResource::collection($this->whenLoaded('media')),
             'location' => new LocationResource($this->whenLoaded('location')),
             'created_at' => $this->created_at,

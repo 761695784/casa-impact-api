@@ -10,8 +10,14 @@ use Illuminate\Validation\Rule;
 
 /**
  * Saisie manuelle par l'admin, pour les membres ayant adhéré AVANT la mise
- * en ligne du site (accord explicite de l'utilisateur le 2026-08-24). Deux
+ * en ligne du site (accord explicite de l'utilisateur le 2026-08-24). Trois
  * différences avec StoreMembershipRequest (formulaire public) :
+ *   - `numero_membre` (string, optionnel — accord explicite du 2026-09-11) :
+ *     permet de conserver l'ID d'un membre qui possède déjà une carte
+ *     imprimée (import historique au coup par coup), au lieu de toujours
+ *     passer par MembershipReferenceGenerator. Doit rester unique. Laissé
+ *     vide, le contrôleur génère un nouvel ID comme avant — voir
+ *     Admin\MembershipController::store().
  *   - `send_welcome_email` (bool, défaut false) : permet à l'admin de NE
  *     PAS envoyer le mail "adhésion reçue aujourd'hui" pour un adhérent
  *     historique — voir Admin\MembershipController::store().
@@ -32,6 +38,10 @@ class StoreMembershipManualRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'numero_membre' => [
+                'nullable', 'string', 'max:50', 'regex:/^[A-Za-z0-9\-]+$/',
+                Rule::unique('memberships', 'numero_membre'),
+            ],
             'nom_complet' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'telephone' => ['required', 'string', 'max:30'],

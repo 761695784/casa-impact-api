@@ -2,52 +2,37 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use Dedoc\Scramble\Attributes\Group;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\StoreImpactValueRequest;
-use App\Http\Requests\Admin\UpdateImpactValueRequest;
 use App\Http\Resources\ImpactValueResource;
-use App\Models\ImpactIndicator;
 use App\Models\ImpactValue;
+use Illuminate\Http\Request;
 
 /**
- * Nested sous /api/admin/impact-indicators/{impactIndicator}/values — les
- * valeurs n'existent jamais indépendamment de leur indicateur (pas de
- * endpoint "toutes les valeurs" à plat). Les permissions restent celles de
- * ImpactIndicatorPolicy (`impact.*`) : gérer une valeur, c'est gérer
- * l'indicateur.
+ * Un point de mesure n'existe jamais seul côté frontend (toujours créé via
+ * ImpactIndicatorController::addValue()), mais se modifie/supprime par son
+ * propre id une fois créé — d'où ce contrôleur séparé à la racine
+ * `/api/admin/impact-values/{impactValue}` (pas imbriqué sous l'indicateur).
  */
-#[Group('Impact — Admin')]
 class ImpactValueController extends Controller
 {
-    public function store(StoreImpactValueRequest $request, ImpactIndicator $impactIndicator)
+    public function update(Request $request, ImpactValue $impactValue)
     {
-        $this->authorize('update', $impactIndicator);
+        $data = $request->validate([
+            'valeur' => ['required', 'numeric'],
+            'periode' => ['nullable', 'string', 'max:50'],
+            'region' => ['nullable', 'string', 'in:ziguinchor,sedhiou,kolda'],
+        ]);
 
-        $value = $impactIndicator->values()->create($request->validated());
+        $impactValue->update($data);
 
-        return (new ImpactValueResource($value))
-            ->additional(['message' => 'Valeur ajoutée avec succès.'])
-            ->response()
-            ->setStatusCode(201);
-    }
-
-    public function update(UpdateImpactValueRequest $request, ImpactValue $impactValue)
-    {
-        $this->authorize('update', $impactValue->impactIndicator);
-
-        $impactValue->update($request->validated());
-
-        return (new ImpactValueResource($impactValue->fresh()))
-            ->additional(['message' => 'Valeur mise à jour avec succès.']);
+        return (new ImpactValueResource($impactValue))
+            ->additional(['message' => 'Le point de mesure a été mis à jour avec succès.']);
     }
 
     public function destroy(ImpactValue $impactValue)
     {
-        $this->authorize('update', $impactValue->impactIndicator);
-
         $impactValue->delete();
 
-        return response()->json(['message' => 'Valeur supprimée avec succès.']);
+        return response()->json(['message' => 'Le point de mesure a été supprimé avec succès.']);
     }
 }

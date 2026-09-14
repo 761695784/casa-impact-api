@@ -8,12 +8,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreMembershipManualRequest;
 use App\Http\Requests\Admin\UpdateMembershipRequest;
 use App\Http\Resources\Admin\MembershipResource;
+use App\Mail\MembershipPaymentReminder;
 use App\Models\Membership;
 use App\Notifications\MembershipValidated;
 use App\Services\MembershipCardService;
 use App\Services\MembershipReferenceGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
@@ -54,7 +56,20 @@ class MembershipController extends Controller
             ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->string('statut')))
             ->when($request->filled('region'), fn ($q) => $q->where('region', $request->string('region')))
             ->when($request->filled('source'), fn ($q) => $q->where('source', $request->string('source')))
+            // Tri "plus récent au plus ancien" (accord du 2026-09-14) : trier
+            // uniquement par created_at ne suffit pas dès que plusieurs
+            // membres partagent EXACTEMENT le même created_at (cas courant
+            // d'un import Excel en masse, où beaucoup de lignes reçoivent le
+            // même horodatage à la seconde près) — dans ce cas MySQL ne
+            // garantit AUCUN ordre pour les lignes ex æquo, ce qui pouvait
+            // donner l'impression d'un tri quasi aléatoire/croissant plutôt
+            // que du plus récent au plus ancien. `id` étant strictement
+            // croissant à l'insertion et jamais ex æquo, il sert de
+            // départage déterministe : entre deux membres créés à la même
+            // seconde, celui inséré en dernier (id le plus grand) apparaît
+            // en premier.
             ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate($perPage);
 
         return MembershipResource::collection($memberships);
@@ -71,9 +86,14 @@ class MembershipController extends Controller
      * Saisie manuelle par l'admin — créée DIRECTEMENT au statut `validee`
      * (pas de cycle "en attente de paiement" : l'admin ne saisit que des
      * adhésions déjà réglées/actées en dehors du site). `send_welcome_email`
-     * (défaut true) permet de sauter l'email de bienvenue "vous venez de
-     * rejoindre Casa Impact aujourd'hui" pour un adhérent historique — voir
-     * StoreMembershipManualRequest. La carte de membre est toujours
+     * (défaut false — accord explicite du 2026-09-11, un ajout manuel
+     * concerne presque toujours un adhérent historique) permet de sauter
+     * l'email de bienvenue "vous venez de rejoindre Casa Impact aujourd'hui"
+     * — voir StoreMembershipManualRequest. `numero_membre` (optionnel,
+     * accord du 2026-09-11) : si fourni (membre ayant déjà une carte
+     * imprimée), conservé tel quel après vérification d'unicité par la
+     * FormRequest ; sinon généré comme avant via
+     * MembershipReferenceGenerator. La carte de membre est toujours
      * générée (accessible ensuite via downloadCard()), qu'un email soit
      * envoyé ou non.
      */
@@ -82,14 +102,17 @@ class MembershipController extends Controller
         $this->authorize('create', Membership::class);
 
         $data = $request->validated();
-        $sendWelcomeEmail = (bool) ($data['send_welcome_email'] ?? true);
+        $sendWelcomeEmail = (bool) ($data['send_welcome_email'] ?? false);
         unset($data['send_welcome_email']);
+
+        $numeroMembre = $data['numero_membre'] ?? null;
+        unset($data['numero_membre']);
 
         $photoPath = $request->file('photo')->store('membership-photos', 'public');
 
         $membership = Membership::create([
             ...collect($data)->except(['photo'])->all(),
-            'numero_membre' => $this->referenceGenerator->generate(),
+            'numero_membre' => $numeroMembre ?: $this->referenceGenerator->generate(),
             'photo_path' => $photoPath,
             'statut' => MembershipStatus::Validee->value,
             'source' => 'manuel',
@@ -158,6 +181,96 @@ class MembershipController extends Controller
             ->additional(['message' => 'Adhésion mise à jour avec succès.']);
     }
 
+    /**
+     * Ajoute ou remplace la photo d'un membre déjà existant — pensé pour
+     * les membres importés depuis l'historique Excel (`source =
+     * import_excel`), créés sans photo (seulement un lien Google Drive
+     * dans le fichier source, jamais téléchargé automatiquement — accord
+     * du 2026-09-11). Peut aussi remplacer la photo de n'importe quel
+     * autre membre (même règle d'autorisation que update()). L'ancienne
+     * photo, si elle existe, est supprimée du disque pour éviter
+     * d'accumuler des fichiers orphelins.
+     */
+    public function updatePhoto(Request $request, Membership $membership)
+    {
+        $this->authorize('update', $membership);
+
+        $request->validate([
+            'photo' => ['required', 'image', 'max:10240'],
+        ]);
+
+        if ($membership->photo_path) {
+            Storage::disk('public')->delete($membership->photo_path);
+        }
+
+        $photoPath = $request->file('photo')->store('membership-photos', 'public');
+        $membership->update(['photo_path' => $photoPath]);
+
+        return (new MembershipResource($membership->fresh()))
+            ->additional(['message' => 'Photo mise à jour avec succès.']);
+    }
+
+    /**
+     * Bouton "Envoyer un rappel de paiement" de la page admin Adhésions
+     * (accord du 2026-09-11) — relance par email tous les membres dont
+     * l'adhésion est encore `en_attente_paiement` (ils n'ont pas finalisé :
+     * paiement Wave pas encore reçu/vérifié), avec les mêmes instructions
+     * de paiement que l'email de confirmation initial (MembershipReceived),
+     * pour qu'ils n'aient pas à retrouver ce premier email.
+     *
+     * `membership_ids` est optionnel : si fourni, ne relance QUE ces
+     * membres précis (utile pour un futur bouton "rappel" ligne par ligne)
+     * — s'il est absent ou vide, cible TOUS les membres en attente de
+     * paiement (c'est le comportement du bouton actuel côté admin). Dans
+     * les deux cas, seuls les membres réellement `en_attente_paiement`
+     * sont retenus : impossible de relancer par erreur un membre déjà
+     * validé ou refusé, même en passant son id explicitement.
+     */
+    public function sendPaymentReminders(Request $request)
+    {
+        $this->authorize('viewAny', Membership::class);
+
+        $validated = $request->validate([
+            'membership_ids' => ['sometimes', 'array'],
+            'membership_ids.*' => ['integer'],
+        ]);
+
+        $memberships = Membership::query()
+            ->where('statut', MembershipStatus::EnAttentePaiement->value)
+            ->when(
+                !empty($validated['membership_ids']),
+                fn ($q) => $q->whereIn('id', $validated['membership_ids'])
+            )
+            ->get();
+
+        if ($memberships->isEmpty()) {
+            return response()->json([
+                'message' => 'Aucun membre en attente de paiement à relancer.',
+                'sent' => 0,
+                'failed' => [],
+            ]);
+        }
+
+        $failed = [];
+        foreach ($memberships as $membership) {
+            try {
+                Mail::to($membership->email)->send(new MembershipPaymentReminder($membership));
+            } catch (\Throwable $e) {
+                $failed[] = $membership->numero_membre;
+            }
+        }
+
+        $sent = $memberships->count() - count($failed);
+
+        return response()->json([
+            'message' => count($failed) === 0
+                ? "Rappel envoyé avec succès à {$sent} membre(s)."
+                : "Rappel envoyé à {$sent} membre(s), " . count($failed) . ' échec(s).',
+            'sent' => $sent,
+            'failed' => $failed,
+        ]);
+    }
+
     public function destroy(Membership $membership)
     {
         $this->authorize('delete', $membership);
@@ -213,6 +326,7 @@ class MembershipController extends Controller
             ->when($request->filled('region'), fn ($q) => $q->where('region', $request->string('region')))
             ->when($request->filled('source'), fn ($q) => $q->where('source', $request->string('source')))
             ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->cursor();
 
         return $this->streamCsv(

@@ -24,6 +24,11 @@ class ApplicationCallController extends Controller
 
         $applicationCalls = ApplicationCall::query()
             ->with('program')
+            // Correctif du 2026-09-14 : le compteur "X reçue(s)" affiché
+            // côté admin restait toujours à 0, faute de ce withCount — voir
+            // ApplicationCallResource::candidatures_count (même principe
+            // que ProgramController::index()/appels_count).
+            ->withCount('applications')
             ->when($request->filled('search'), fn ($q) => $q->where('titre', 'like', "%{$request->string('search')}%"))
             ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->string('statut')))
             ->when($request->filled('region'), fn ($q) => $q->where('region', $request->string('region')))
@@ -54,6 +59,8 @@ class ApplicationCallController extends Controller
     {
         $this->authorize('view', $applicationCall);
 
+        $applicationCall->loadCount('applications');
+
         return new ApplicationCallResource($applicationCall->load(['program', 'media', 'location']));
     }
 
@@ -66,7 +73,10 @@ class ApplicationCallController extends Controller
         // pris en compte.
         $applicationCall->update($request->validated());
 
-        return (new ApplicationCallResource($applicationCall->fresh()->load('program')))
+        $updated = $applicationCall->fresh()->load('program');
+        $updated->loadCount('applications');
+
+        return (new ApplicationCallResource($updated))
             ->additional(['message' => "Appel à candidatures mis à jour avec succès."]);
     }
 

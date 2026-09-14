@@ -38,6 +38,10 @@ class ApplicationResource extends JsonResource
             'application_call_id' => $this->application_call_id,
             'application_call' => new ApplicationCallResource($this->whenLoaded('applicationCall')),
             'documents' => ApplicationDocumentResource::collection($this->whenLoaded('documents')),
+            // Historique des changements de statut + emails envoyés (accord
+            // du 2026-09-14) — uniquement si eager-loadée (voir
+            // Admin\ApplicationController::show()/update()/notify()).
+            'history' => ApplicationHistoryResource::collection($this->whenLoaded('history')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

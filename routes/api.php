@@ -1,7 +1,10 @@
 <?php
 
 // En haut du fichier, avec les autres "use"
+use App\Http\Controllers\Api\Public\CartographyController as PublicCartographyController;
+use App\Http\Controllers\Api\Admin\CartographyController;
 use App\Http\Controllers\Api\Admin\MembershipController as AdminMembershipController;
+use App\Http\Controllers\Api\Admin\MembershipController;
 use App\Http\Controllers\Api\Public\MembershipController as PublicMembershipController;
 use App\Http\Controllers\Api\Admin\ApplicationCallController as AdminApplicationCallController;
 use App\Http\Controllers\Api\Admin\ApplicationController as AdminApplicationController;
@@ -35,6 +38,8 @@ use App\Http\Controllers\Api\Public\ProgramController as PublicProgramController
 use App\Http\Controllers\Api\Public\ProgramTypeController as PublicProgramTypeController;
 use App\Http\Controllers\Api\Public\TalentController as PublicTalentController;
 use App\Http\Controllers\Api\Public\TestimonialController as PublicTestimonialController;
+use App\Http\Controllers\Api\Admin\MembershipImportController;
+use App\Http\Controllers\Api\Admin\AdminMessageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -74,11 +79,21 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
 
         Route::apiResource('pages', AdminPageController::class);
+        Route::get('cartography', [CartographyController::class, 'index']);
+
 
         // Dans le groupe Route::prefix('admin')->middleware('auth:sanctum'), avec les autres apiResource
+        Route::post('memberships/payment-reminder', [MembershipController::class, 'sendPaymentReminders']);
         Route::get('memberships/export', [AdminMembershipController::class, 'export'])->name('memberships.export');
         Route::get('memberships/{membership}/card', [AdminMembershipController::class, 'downloadCard'])->name('memberships.card');
         Route::apiResource('memberships', AdminMembershipController::class);
+        Route::post('memberships/import-legacy/preview', [MembershipImportController::class, 'preview']);
+        Route::post('memberships/import-legacy/commit', [MembershipImportController::class, 'commit']);
+        Route::delete('memberships/import-legacy/{token}', [MembershipImportController::class, 'cancel']);
+        Route::post('memberships/{membership}/photo', [MembershipController::class, 'updatePhoto']);
+        Route::post('messages/send', [AdminMessageController::class, 'send']);
+        Route::post('messages/send', [AdminMessageController::class, 'send']);
+
 
         // Pas d'apiResource ici : domaines = référentiel fixe, seulement
         // index/show/update exposés (voir DomainController, DomainPolicy).
@@ -99,6 +114,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Candidatures : pas de store() (soumission publique uniquement) + export CSV.
         Route::get('applications/export', [AdminApplicationController::class, 'export'])->name('applications.export');
+        // Historique + envoi groupé des emails en attente (accord du
+        // 2026-09-14) — routes littérales déclarées AVANT l'apiResource,
+        // même raison que 'export' juste au-dessus (voir remarque en tête
+        // de fichier sur l'ordre des routes).
+        Route::get('applications/history', [AdminApplicationController::class, 'history'])->name('applications.history.index');
+        Route::get('applications/history/export', [AdminApplicationController::class, 'exportHistory'])->name('applications.history.export');
+        Route::get('applications/pending-notifications-count', [AdminApplicationController::class, 'pendingNotificationsCount'])->name('applications.pending-notifications-count');
+        Route::post('applications/notify-pending', [AdminApplicationController::class, 'notifyPending'])->name('applications.notify-pending');
         Route::apiResource('applications', AdminApplicationController::class)
             ->only(['index', 'show', 'update', 'destroy']);
         Route::get('applications/{application}/documents/{document}/download', [AdminApplicationController::class, 'downloadDocument'])
@@ -106,6 +129,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Sortie de liste d'attente en un clic.
         Route::post('applications/{application}/promote', [AdminApplicationController::class, 'promote'])
             ->name('applications.promote');
+        // Envoi manuel de l'email contextuel du statut actuel (bouton
+        // dédié, accord du 2026-09-14) — voir ApplicationController::notify().
+        Route::post('applications/{application}/notify', [AdminApplicationController::class, 'notify'])
+            ->name('applications.notify');
 
         // Actualités : CRUD complet + export CSV.
         Route::get('news/export', [AdminNewsController::class, 'export'])->name('news.export');
@@ -169,6 +196,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 Route::prefix('public')->name('public.')->group(function () {
     Route::get('pages', [PublicPageController::class, 'index'])->name('pages.index');
     Route::get('pages/{slug}', [PublicPageController::class, 'show'])->name('pages.show');
+
+
+    Route::get('map', [PublicCartographyController::class, 'index']);
 
     Route::get('domains', [PublicDomainController::class, 'index'])->name('domains.index');
     Route::get('domains/{slug}', [PublicDomainController::class, 'show'])->name('domains.show');

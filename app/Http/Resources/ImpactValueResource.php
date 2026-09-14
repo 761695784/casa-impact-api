@@ -16,7 +16,7 @@ class ImpactValueResource extends JsonResource
             'id' => $this->id,
             'valeur' => (float) $this->valeur,
             'periode' => $this->periode,
-            'region' => $this->region?->value,
+            'region' => $this->region,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

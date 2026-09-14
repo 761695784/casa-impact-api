@@ -93,7 +93,7 @@
             <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%;">
                 <tr>
                     <td style="padding: 16px 32px; color:#9b9a90; font-size:11px; text-align:center;">
-                        Cet email vous a été envoyé automatiquement par la plateforme Casa Impact.
+                        Cet email vous a été envoyé via la plateforme de Casa Impact.
                     </td>
                 </tr>
             </table>

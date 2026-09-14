@@ -6,10 +6,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Resource partagée admin/public : aucun champ sensible. `values` n'est
- * incluse que si eager-loadée (whenLoaded) — le endpoint public charge
- * systématiquement les valeurs, l'index admin ne les charge pas par défaut
- * (évite N+1 sur une longue liste d'indicateurs en back-office).
+ * Une seule Resource partagée admin/public (pas de dossier Admin/ ni Public/,
+ * contrairement à MembershipResource) : un indicateur d'impact n'a aucune
+ * donnée sensible et est identique dans les deux contextes — la distinction
+ * se fait uniquement sur QUELS indicateurs sont renvoyés (tous côté admin,
+ * voir Api\Admin\ImpactIndicatorController::index()), jamais sur leur forme.
  *
  * @mixin \App\Models\ImpactIndicator
  */
@@ -22,7 +23,7 @@ class ImpactIndicatorResource extends JsonResource
             'libelle' => $this->libelle,
             'unite' => $this->unite,
             'description' => $this->description,
-            'values' => ImpactValueResource::collection($this->whenLoaded('values')),
+            'values' => ImpactValueResource::collection($this->values),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

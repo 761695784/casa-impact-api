@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-use App\Enums\Region;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Un point de mesure ponctuel rattaché à un ImpactIndicator (ex. "2025/2026,
+ * région Kolda, valeur 42") — sous-ressource imbriquée, jamais accédée hors
+ * du contexte de son indicateur côté frontend (voir ImpactValueController).
+ */
 class ImpactValue extends Model
 {
     use HasFactory;
-
-    // Déclaré explicitement par précaution suite au bug de pluralisation
-    // constaté sur Talent (voir Talent::$table).
-    protected $table = 'impact_values';
 
     protected $fillable = [
         'impact_indicator_id',
@@ -21,15 +22,11 @@ class ImpactValue extends Model
         'region',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'valeur' => 'decimal:2',
-            'region' => Region::class,
-        ];
-    }
+    protected $casts = [
+        'valeur' => 'float',
+    ];
 
-    public function impactIndicator()
+    public function impactIndicator(): BelongsTo
     {
         return $this->belongsTo(ImpactIndicator::class);
     }

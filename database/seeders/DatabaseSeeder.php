@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             DomainsSeeder::class,
             AdminUserSeeder::class,
+            ProgramTypesSeeder::class,
         ]);
 
         // Aucun utilisateur ni donnée métier de démonstration : conforme à

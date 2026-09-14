@@ -57,6 +57,18 @@ class Application extends Model
     }
 
     /**
+     * Journal des changements de statut et emails envoyés (accord du
+     * 2026-09-14, pour l'historique destiné aux partenaires) — voir
+     * ApplicationHistory et Admin\ApplicationController::update()/notify().
+     * Plus récent en premier : c'est l'ordre naturel d'affichage d'un
+     * historique.
+     */
+    public function history()
+    {
+        return $this->hasMany(ApplicationHistory::class)->latest();
+    }
+
+    /**
      * "Compte" contre le quota nombre_places de l'appel — une candidature
      * déjà en liste d'attente n'occupe pas de place (voir
      * ApplicationCapacityChecker).
