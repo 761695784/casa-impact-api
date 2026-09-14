@@ -215,6 +215,11 @@ Route::prefix('public')->name('public.')->group(function () {
     ->middleware('throttle:10,1')
     ->name('memberships.store');
 
+    // Compteur public "Membres Actifs" (section Chiffres clés du site,
+    // accord du 2026-09-14) — un seul agrégat, aucune donnée personnelle.
+    Route::get('memberships/count', [PublicMembershipController::class, 'count'])
+        ->name('memberships.count');
+
     // Soumission de candidature — jamais de liste/détail public (données
     // personnelles, voir Admin\ApplicationResource). Throttle anti-abus.
     Route::post('applications', [PublicApplicationController::class, 'store'])

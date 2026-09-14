@@ -22,6 +22,24 @@ class MembershipController extends Controller
     {
     }
 
+    /**
+     * Nombre de membres actifs (adhésion VALIDÉE, cotisation réglée,
+     * carte officielle) — alimente le compteur "Membres Actifs" de la
+     * section "Chiffres clés" du site public (accord du 2026-09-14 :
+     * "au lieu de 130 membres... que ca soit connecté avec l'api pour que
+     * cela affiche concretement le nombre reel"). Volontairement un seul
+     * agrégat, sans aucune donnée personnelle — sûr à exposer sans
+     * authentification, contrairement au reste du module Adhésions.
+     */
+    public function count()
+    {
+        return response()->json([
+            'membres_actifs' => Membership::query()
+                ->where('statut', MembershipStatus::Validee->value)
+                ->count(),
+        ]);
+    }
+
     public function store(StoreMembershipRequest $request)
     {
         $data = $request->validated();
