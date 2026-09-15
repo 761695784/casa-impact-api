@@ -1,8 +1,7 @@
 <?php
 
 use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
-use Dedoc\Scramble\SecurityDocumentation\MiddlewareAuthSecurityStrategy;
-use Dedoc\Scramble\Support\Generator\SecurityScheme;
+
 
 return [
 
@@ -130,22 +129,5 @@ MD,
     ],
 
     'extensions' => [],
-
-    /*
-     * Les routes admin sont protégées par `auth:sanctum` → Scramble détecte
-     * ce middleware et marque automatiquement ces endpoints comme
-     * nécessitant une authentification. Le schéma par défaut de Scramble
-     * pour `auth:*` est un Bearer token — on le remplace ici par un schéma
-     * `apiKey` en cookie ("cookieAuth"), qui reflète fidèlement notre
-     * authentification Sanctum SPA (voir info.description ci-dessus pour le
-     * flux complet).
-     */
-    'security_strategy' => [
-        MiddlewareAuthSecurityStrategy::class,
-        [
-            'middleware' => ['auth', 'auth:*'],
-            'scheme' => SecurityScheme::apiKey('cookie', 'laravel_session'),
-        ],
-    ],
 
 ];
