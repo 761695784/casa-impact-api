@@ -28,6 +28,18 @@
     exister sur le disque à public/images/mail/ (inchangé — voir README
     de la livraison du 24/08).
 
+    CORRIGÉ le 2026-09-16 ("l'envoie des mails ne sont pas déclenchés") :
+    le fichier sur disque s'appelle "Casa-Impact.png" (I majuscule) mais
+    était référencé ici en "Casa-impact.png" (i minuscule). Windows
+    (environnement de développement) ignore la casse des noms de fichiers,
+    donc ça fonctionnait en local sans que l'écart soit visible — mais le
+    serveur de production (Linux, Hostinger) est sensible à la casse :
+    public_path('images/mail/Casa-impact.png') ne correspondait à aucun
+    fichier réel, ce qui faisait échouer l'envoi de CHAQUE email (tous
+    passent par ce layout) avec "Unable to open path" dans
+    storage/logs/laravel.log. La casse ci-dessous doit rester identique
+    au nom réel du fichier sur le disque.
+
     Couleurs alignées sur l'identité visuelle exacte du site (voir
     app/globals.css du frontend) : vert forêt #02542D, ambre #F2A20D
     ("mangue mûre") — plus un fidèle #163a2b approximatif.
@@ -46,7 +58,7 @@
                 {{-- En-tête : logo sur fond vert forêt Casa Impact --}}
                 <tr>
                     <td style="background-color:#02542D; padding: 24px 32px;" align="left">
-                        <img src="{{ $message->embed(public_path('images/mail/Casa-impact.png')) }}" alt="Casa Impact" height="48" style="display:block; height:48px; width:auto;">
+                        <img src="{{ $message->embed(public_path('images/mail/Casa-Impact.png')) }}" alt="Casa Impact" height="48" style="display:block; height:48px; width:auto;">
                     </td>
                 </tr>
 
