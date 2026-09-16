@@ -21,7 +21,7 @@
      */
     @page {
         size: A4 landscape;
-        margin: 100pt 24pt 46pt 24pt;
+        margin: 116pt 24pt 46pt 24pt;
     }
 
     html, body {
@@ -39,56 +39,88 @@
         width: 340pt;
     }
 
-    /* ---------- En-tête (répété sur chaque page) ---------- */
+    /*
+     * En-tête façon "papier à en-tête" (accord du 2026-09-16) : logo +
+     * coordonnées officielles de l'association à gauche, titre du
+     * document (dépend du filtre statut — voir exportPdf()) + effectif +
+     * date d'export à droite, pour qu'une impression seule (sans écran
+     * admin à côté) dise déjà "quoi, combien, à quelle date".
+     */
     .page-header {
         position: fixed;
-        top: -92pt;
+        top: -108pt;
         left: 0pt;
         right: 0pt;
-        height: 80pt;
+        height: 96pt;
         border-bottom: 2pt solid #02542D;
     }
 
     .ph-logo {
         position: absolute;
-        top: 0pt;
+        top: 4pt;
         left: 0pt;
-        width: 150pt;
+        width: 64pt;
     }
 
-    .ph-title-main {
+    .ph-org {
         position: absolute;
-        top: 6pt;
-        left: 180pt;
-        font-size: 18pt;
+        top: 4pt;
+        left: 80pt;
+        width: 260pt;
+    }
+
+    .ph-org-name {
+        font-size: 13pt;
         font-weight: bold;
         color: #02542D;
+        letter-spacing: 0.5pt;
     }
 
-    .ph-title-sub {
-        position: absolute;
-        top: 28pt;
-        left: 180pt;
-        font-size: 8.5pt;
+    .ph-org-tagline {
+        font-size: 7.5pt;
         color: #6b6b63;
         font-style: italic;
+        margin-top: 1pt;
     }
 
-    .ph-meta {
-        position: absolute;
-        top: 6pt;
-        right: 0pt;
-        width: 260pt;
-        text-align: right;
-        font-size: 8pt;
+    .ph-org-contact {
+        font-size: 7.5pt;
         color: #4a4a44;
-        line-height: 1.5;
+        margin-top: 7pt;
+        line-height: 1.55;
     }
 
-    .ph-meta .ph-count {
+    .ph-doc {
+        position: absolute;
+        top: 4pt;
+        right: 0pt;
+        width: 360pt;
+        text-align: right;
+    }
+
+    .ph-doc-title {
+        font-size: 15.5pt;
+        font-weight: bold;
+        color: #02542D;
+        line-height: 1.25;
+    }
+
+    .ph-doc-filters {
+        font-size: 8pt;
+        color: #6b6b63;
+        margin-top: 3pt;
+    }
+
+    .ph-doc-meta {
+        font-size: 8.5pt;
+        color: #4a4a44;
+        margin-top: 8pt;
+    }
+
+    .ph-doc-meta .count {
         color: #F2A20D;
         font-weight: bold;
-        font-size: 9.5pt;
+        font-size: 10.5pt;
     }
 
     /* ---------- Pied de page (répété sur chaque page) ---------- */
@@ -191,14 +223,25 @@
         @if (file_exists(public_path('images/mail/logo-couleur.png')))
             <img class="ph-logo" src="{{ public_path('images/mail/logo-couleur.png') }}">
         @endif
-        <div class="ph-title-main">Liste des Adhérents</div>
-        <div class="ph-title-sub">Casa Impact &mdash; trois régions, une vision, un impact</div>
-        <div class="ph-meta">
-            <div>Généré le {{ $generatedAt->format('d/m/Y à H:i') }}</div>
-            <div class="ph-count">{{ $memberships->count() }} adhérent(s)</div>
+
+        <div class="ph-org">
+            <div class="ph-org-name">CASA IMPACT</div>
+            <div class="ph-org-tagline">Trois régions &bull; Une vision &bull; Un impact</div>
+            <div class="ph-org-contact">
+                Rue 26 Boukot Ouest, Villa n&deg;268 &mdash; Ziguinchor, Sénégal<br>
+                Tél. : 78 103 30 63 &mdash; casaimpactF0rt@gmail.com
+            </div>
+        </div>
+
+        <div class="ph-doc">
+            <div class="ph-doc-title">{{ $title }}</div>
             @if ($filterSummary)
-                <div>{{ $filterSummary }}</div>
+                <div class="ph-doc-filters">{{ $filterSummary }}</div>
             @endif
+            <div class="ph-doc-meta">
+                <span class="count">{{ $memberships->count() }}</span> adhérent(s) au {{ $generatedAt->format('d/m/Y') }}
+                <br>Export généré le {{ $generatedAt->format('d/m/Y à H:i') }}
+            </div>
         </div>
     </div>
 

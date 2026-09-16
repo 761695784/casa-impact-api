@@ -415,12 +415,24 @@ class MembershipController extends Controller
             ContributionDomain::ComiteDesSages->value => 'Comité des Sages',
         ];
 
+        // Titre du document déterminé par le filtre `statut` (accord du
+        // 2026-09-16 : "un titre comme liste officielle des membres
+        // (validées)... de même que la liste des non validés") — le PDF
+        // doit annoncer clairement QUEL sous-ensemble il contient, pas
+        // juste "liste des adhérents" pour tout et n'importe quoi.
+        $title = match ($request->filled('statut') ? $request->string('statut')->toString() : null) {
+            MembershipStatus::Validee->value => 'Liste officielle des membres validés',
+            MembershipStatus::EnAttentePaiement->value => 'Liste des adhérents en attente de paiement',
+            MembershipStatus::Refusee->value => 'Liste des demandes refusées / sans suite',
+            default => 'Liste officielle des adhérents',
+        };
+
+        // Filtres secondaires (recherche/région) affichés sous le titre —
+        // le statut n'y figure plus puisqu'il est déjà porté par le titre
+        // lui-même.
         $filterParts = [];
         if ($request->filled('search')) {
             $filterParts[] = 'Recherche : "'.$request->string('search').'"';
-        }
-        if ($request->filled('statut')) {
-            $filterParts[] = 'Statut : '.($statusLabels[$request->string('statut')->toString()] ?? $request->string('statut'));
         }
         if ($request->filled('region')) {
             $filterParts[] = 'Région : '.($regionLabels[$request->string('region')->toString()] ?? $request->string('region'));
@@ -429,6 +441,7 @@ class MembershipController extends Controller
 
         $pdf = Pdf::loadView('pdf.memberships-list', [
             'memberships' => $memberships,
+            'title' => $title,
             'generatedAt' => now(),
             'filterSummary' => $filterSummary,
             'statusLabels' => $statusLabels,
