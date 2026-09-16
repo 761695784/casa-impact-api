@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Enums\ContributionDomain;
+use App\Enums\ContributionType;
+use App\Enums\MembershipRegion;
 use App\Enums\MembershipStatus;
 use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
@@ -13,6 +16,7 @@ use App\Models\Membership;
 use App\Notifications\MembershipValidated;
 use App\Services\MembershipCardService;
 use App\Services\MembershipReferenceGenerator;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -346,5 +350,96 @@ class MembershipController extends Controller
             ],
             'adhesions'
         );
+    }
+
+    /**
+     * Export PDF "pro" de la liste des adhérents (accord du 2026-09-16, en
+     * complément de l'export CSV ci-dessus) — mêmes filtres exacts
+     * (search/statut/region/source, appliqués via les mêmes query params
+     * que index()/export()), mais rendu paysage avec la charte graphique
+     * (logo, couleurs, filigrane — voir resources/views/pdf/
+     * memberships-list.blade.php) via DomPDF, déjà utilisé par
+     * MembershipCardService pour les cartes de membre. Pas de curseur
+     * mémoire-minimal ici (contrairement à export()) : le rendu HTML du
+     * PDF a besoin de la collection complète, ce qui reste largement
+     * raisonnable pour un volume associatif.
+     */
+    public function exportPdf(Request $request)
+    {
+        $this->authorize('viewAny', Membership::class);
+
+        $memberships = Membership::query()
+            ->when(
+                $request->filled('search'),
+                fn ($q) => $q->where(function ($q) use ($request) {
+                    $search = $request->string('search');
+                    $q->where('nom_complet', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('numero_membre', 'like', "%{$search}%");
+                })
+            )
+            ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->string('statut')))
+            ->when($request->filled('region'), fn ($q) => $q->where('region', $request->string('region')))
+            ->when($request->filled('source'), fn ($q) => $q->where('source', $request->string('source')))
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
+
+        // Libellés français alignés sur types/enums.ts côté front (mêmes
+        // valeurs affichées dans le panneau admin), pour que le PDF parle
+        // le même langage que l'écran d'où il est généré.
+        $statusLabels = [
+            MembershipStatus::EnAttentePaiement->value => 'En attente de paiement',
+            MembershipStatus::Validee->value => 'Validée',
+            MembershipStatus::Refusee->value => 'Refusée',
+        ];
+        $regionLabels = [
+            MembershipRegion::Ziguinchor->value => 'Ziguinchor',
+            MembershipRegion::Sedhiou->value => 'Sédhiou',
+            MembershipRegion::Kolda->value => 'Kolda',
+            MembershipRegion::Dakar->value => 'Dakar',
+            MembershipRegion::Diaspora->value => 'Diaspora',
+        ];
+        $contributionTypeLabels = [
+            ContributionType::MembreActif->value => 'Membre actif',
+            ContributionType::BenevolePonctuel->value => 'Bénévole ponctuel',
+            ContributionType::ExpertConseillerTechnique->value => 'Expert / Conseiller technique',
+        ];
+        $contributionDomainLabels = [
+            ContributionDomain::PoleCapitalHumain->value => 'Pôle Capital Humain',
+            ContributionDomain::PoleEconomieAgricultureAttractivite->value => 'Pôle Économie, Agriculture & Attractivité',
+            ContributionDomain::PoleCultureCommunication->value => 'Pôle Culture & Communication',
+            ContributionDomain::PoleSupport->value => 'Pôle Support',
+            ContributionDomain::CommissionScientifique->value => 'Commission scientifique',
+            ContributionDomain::CoordinationRegionale->value => 'Coordination régionale',
+            ContributionDomain::ComiteDesSages->value => 'Comité des Sages',
+        ];
+
+        $filterParts = [];
+        if ($request->filled('search')) {
+            $filterParts[] = 'Recherche : "'.$request->string('search').'"';
+        }
+        if ($request->filled('statut')) {
+            $filterParts[] = 'Statut : '.($statusLabels[$request->string('statut')->toString()] ?? $request->string('statut'));
+        }
+        if ($request->filled('region')) {
+            $filterParts[] = 'Région : '.($regionLabels[$request->string('region')->toString()] ?? $request->string('region'));
+        }
+        $filterSummary = empty($filterParts) ? null : implode(' — ', $filterParts);
+
+        $pdf = Pdf::loadView('pdf.memberships-list', [
+            'memberships' => $memberships,
+            'generatedAt' => now(),
+            'filterSummary' => $filterSummary,
+            'statusLabels' => $statusLabels,
+            'regionLabels' => $regionLabels,
+            'contributionTypeLabels' => $contributionTypeLabels,
+            'contributionDomainLabels' => $contributionDomainLabels,
+        ]);
+        $pdf->setPaper('a4', 'landscape');
+
+        $filename = sprintf('adherents-casa-impact-%s.pdf', now()->format('Y-m-d-His'));
+
+        return $pdf->download($filename);
     }
 }
