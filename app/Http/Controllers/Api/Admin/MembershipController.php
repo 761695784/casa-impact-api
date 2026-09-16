@@ -453,6 +453,19 @@ class MembershipController extends Controller
 
         $filename = sprintf('adherents-casa-impact-%s.pdf', now()->format('Y-m-d-His'));
 
-        return $pdf->download($filename);
+        // Cache-Control explicite (accord implicite : un PDF avec des
+        // données personnelles ne doit de toute façon jamais être caché) —
+        // ajouté le 2026-09-16 après un cas où le rendu semblait "figé" sur
+        // une ancienne version malgré un déploiement backend confirmé
+        // (code à jour, tous les caches Laravel vidés) : suspicion que le
+        // proxy/CDN de Hostinger devant api.casaimpact.org (déjà identifié
+        // comme bloquant certaines requêtes POST avec fichier — voir
+        // MembershipImportController) mette aussi en cache cette réponse
+        // GET par URL, sans tenir compte du cookie de session. Sans effet
+        // si ce n'était pas la cause, mais nécessaire dans tous les cas.
+        return $pdf->download($filename)->withHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, private',
+            'Pragma' => 'no-cache',
+        ]);
     }
 }
