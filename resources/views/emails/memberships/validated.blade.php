@@ -20,7 +20,7 @@
 
     <p style="margin:0 0 16px;">
         Rejoignez dès à présent notre communauté WhatsApp pour rester informé(e) de toutes nos actualités et activités :<br>
-        <a href="{{ config('casaimpact.whatsapp_group_url') }}" style="color:#02542D;">{{ config('casaimpact.whatsapp_group_url') }}</a>
+        <a href="{{ $whatsappInviteUrl }}" style="color:#02542D;">{{ $whatsappInviteUrl }}</a>
     </p>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px; background-color:#fdf6e8; border-left:4px solid #F2A20D; border-radius:6px;">
@@ -30,7 +30,7 @@
                     Un point important à votre attention
                 </p>
                 <p style="margin:0 0 12px;">
-                    Ce lien de groupe est strictement réservé aux personnes ayant déjà finalisé leur adhésion. Nous vous remercions de ne pas le partager directement, afin de garantir une bonne gestion des adhésions et de préserver l'intégrité de notre base de données.
+                    Ce lien est <strong>personnel et à usage unique</strong> : il cesse de fonctionner dès qu'il a été utilisé une première fois, même par vous. Merci de ne pas le transférer — toute personne qui cliquerait dessus après vous ne pourra plus rejoindre le groupe via ce lien, afin de garantir une bonne gestion des adhésions et de préserver l'intégrité de notre base de données.
                 </p>
                 <p style="margin:0;">
                     Si vous souhaitez inviter une personne à rejoindre Casa Impact, nous vous invitons simplement à l'orienter vers notre formulaire d'adhésion, afin qu'elle puisse soumettre sa demande dans les conditions prévues :<br>

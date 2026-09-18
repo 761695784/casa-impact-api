@@ -47,9 +47,20 @@ class MembershipValidated extends Notification implements ShouldQueue
     {
         $cardPdfContent = app(MembershipCardService::class)->generate($this->membership);
 
+        // Lien WhatsApp à usage unique (accord du 2026-09-18) — le jeton
+        // est généré ET persisté ICI (pas seulement calculé), avant que
+        // l'email ne soit réellement envoyé, pour que le lien reste valable
+        // même si l'email met du temps à partir (notification queued).
+        // Voir Membership::ensureWhatsappInviteToken() / WhatsappInviteController.
+        $whatsappInviteToken = $this->membership->ensureWhatsappInviteToken();
+        $whatsappInviteUrl = url("/rejoindre-whatsapp/{$whatsappInviteToken}");
+
         return (new MailMessage)
             ->subject('Bienvenue chez Casa Impact — votre adhésion est validée')
-            ->view('emails.memberships.validated', ['membership' => $this->membership])
+            ->view('emails.memberships.validated', [
+                'membership' => $this->membership,
+                'whatsappInviteUrl' => $whatsappInviteUrl,
+            ])
             ->attachData(
                 $cardPdfContent,
                 "carte-membre-{$this->membership->numero_membre}.pdf",
