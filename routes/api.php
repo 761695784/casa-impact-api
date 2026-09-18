@@ -87,6 +87,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('memberships/export', [AdminMembershipController::class, 'export'])->name('memberships.export');
         Route::get('memberships/export-pdf', [AdminMembershipController::class, 'exportPdf'])->name('memberships.export-pdf');
         Route::get('memberships/{membership}/card', [AdminMembershipController::class, 'downloadCard'])->name('memberships.card');
+        Route::get('memberships/{membership}/photo-source', [AdminMembershipController::class, 'photoSource'])->name('memberships.photo-source');
         Route::apiResource('memberships', AdminMembershipController::class);
         Route::post('memberships/import-legacy/preview', [MembershipImportController::class, 'preview']);
         Route::post('memberships/import-legacy/commit', [MembershipImportController::class, 'commit']);

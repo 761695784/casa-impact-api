@@ -87,6 +87,33 @@ class MembershipController extends Controller
     }
 
     /**
+     * Sert les octets ACTUELS de la photo d'un membre — pensé pour le
+     * recadrage a posteriori côté admin (accord du 2026-09-18 : "parfois on
+     * voit que la photo n'est pas bien cadrée... je dois pouvoir recadrer et
+     * enregistrer"). Volontairement une route api/* dédiée plutôt que le
+     * lien direct `photo_url` (`/storage/...`, servi par le webserver sans
+     * passer par Laravel) : seules les routes api/* passent par le
+     * middleware CORS (config/cors.php), indispensable ici puisque le
+     * recadrage dessine l'image dans un <canvas> côté navigateur — une
+     * image chargée cross-origin sans en-tête CORS "taint" le canvas et
+     * bloque toute lecture des pixels (donc impossible d'en tirer un fichier
+     * recadré). `photo_url` reste inchangé et continue de servir uniquement
+     * à l'AFFICHAGE (balises <img>, qui n'ont pas cette contrainte CORS).
+     */
+    public function photoSource(Membership $membership)
+    {
+        $this->authorize('view', $membership);
+
+        abort_unless($membership->photo_path, 404, "Ce membre n'a pas encore de photo.");
+        abort_unless(Storage::disk('public')->exists($membership->photo_path), 404, 'Photo introuvable sur le serveur.');
+
+        return Storage::disk('public')->response($membership->photo_path, null, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, private',
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
+    /**
      * Saisie manuelle par l'admin — créée DIRECTEMENT au statut `validee`
      * (pas de cycle "en attente de paiement" : l'admin ne saisit que des
      * adhésions déjà réglées/actées en dehors du site). `send_welcome_email`
