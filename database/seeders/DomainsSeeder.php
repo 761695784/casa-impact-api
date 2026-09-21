@@ -6,9 +6,14 @@ use App\Models\Domain;
 use Illuminate\Database\Seeder;
 
 /**
- * Les 6 domaines d'intervention proviennent du brief métier officiel
+ * Les 7 domaines d'intervention proviennent du brief métier officiel
  * (section "Nos domaines"). `nom`, `slug`, `icone` et `description` sont
- * tous renseignés dès le seed.
+ * tous renseignés dès le seed. Le 7ème domaine, "Sensibilisation
+ * Environnementale", a été ajouté le 2026-09-21 (accord explicite : les
+ * visuels/axes existaient déjà côté frontend dans `lib/domain-visuals.tsx`
+ * sous le slug `sensibilisation-environnementale`, mais la fiche ne
+ * s'affichait pas faute de ligne correspondante en base — exactement le
+ * même mécanisme que les 6 domaines d'origine).
  *
  * Les textes de `description` ne sont pas un texte institutionnel inventé
  * à part : ils sont composés à partir des 4 "axes stratégiques" déjà
@@ -28,7 +33,9 @@ use Illuminate\Database\Seeder;
  * `updateOrCreate()` pour pouvoir fixer ce champ nous-mêmes depuis ce
  * seeder de confiance, sans dépendre de l'assignation de masse.
  *
- * Rejouable sans dupliquer les 6 domaines (`firstOrNew` sur le slug).
+ * Rejouable sans dupliquer les domaines déjà présents (`firstOrNew` sur le
+ * slug) — voir le README de cette livraison pour la commande à lancer en
+ * SSH afin d'ajouter uniquement le nouveau domaine sans tout re-seeder.
  */
 class DomainsSeeder extends Seeder
 {
@@ -70,6 +77,12 @@ class DomainsSeeder extends Seeder
                 'nom' => 'Investissement & Diaspora',
                 'icone' => 'hand-coins',
                 'description' => "Ce domaine s'articule autour de quatre axes. Le Guichet Diaspora & Investisseurs offre un accompagnement sur-mesure pour faciliter l'investissement productif de la diaspora en Casamance. Les Forums Économiques & B2B organisent des rencontres d'affaires entre porteurs de projets locaux et bailleurs internationaux. La Mobilisation des Compétences repose sur des missions de volontariat d'experts de la diaspora pour des interventions ciblées dans les universités et PME. Le Fonds d'Impact Territorial crée des instruments financiers innovants pour canaliser l'épargne vers des projets à fort impact social.",
+            ],
+            [
+                'slug' => 'sensibilisation-environnementale',
+                'nom' => 'Sensibilisation Environnementale',
+                'icone' => 'leaf',
+                'description' => "Ce domaine s'articule autour de quatre axes. La Régénération des Mangroves & Forêts organise des campagnes citoyennes de reboisement massif et la restauration des écosystèmes fragiles à Ziguinchor, Sédhiou et Kolda. L'Éducation & l'Éco-Citoyenneté proposent des ateliers scolaires, des caravanes de sensibilisation environnementale et des formations aux bonnes pratiques de gestion et de valorisation des déchets. L'Agroécologie & les Énergies Vertes promeuvent des techniques de culture respectueuses des sols, le compostage organique et des solutions solaires adaptées aux terroirs. Les Brigades Vertes & la Protection de la Biodiversité mobilisent de jeunes volontaires pour la veille écologique et la préservation des cours d'eau, de la faune et de la flore locales.",
             ],
         ];
 
