@@ -14,13 +14,13 @@ return [
 
     // Paiement de la cotisation d'adhésion (process décrit par
     // l'utilisateur le 2026-08-24).
-    'wave_number' => env('CASAIMPACT_WAVE_NUMBER', '+221 78 326 73 78'),
+    'wave_number' => env('CASAIMPACT_WAVE_NUMBER', '+221 78 103 30 63'),
     'wave_amount' => env('CASAIMPACT_WAVE_AMOUNT', '1.000 FCFA'),
 
     // Même numéro que le Wave dans le process actuel, mais gardé comme
     // clé séparée : rien n'empêche l'association d'utiliser un numéro
     // WhatsApp différent du numéro Wave à l'avenir.
-    'whatsapp_payment_number' => env('CASAIMPACT_WHATSAPP_PAYMENT_NUMBER', '+221 78 326 73 78'),
+    'whatsapp_payment_number' => env('CASAIMPACT_WHATSAPP_PAYMENT_NUMBER', '+221 78 103 30 63'),
 
     'whatsapp_group_url' => env('CASAIMPACT_WHATSAPP_GROUP_URL', 'https://chat.whatsapp.com/HrJEoGUspvo5G8nLdrnINs'),
 
@@ -32,7 +32,7 @@ return [
     // CASAIMPACT_SIGNATURE_PHONE si ce numéro change un jour.
     'signature_phone' => env('CASAIMPACT_SIGNATURE_PHONE', '+221 78 103 30 63'),
 
-    'signature_email' => env('CASAIMPACT_SIGNATURE_EMAIL', 'casaimpactF0rt@gmail.com'),
+    'signature_email' => env('CASAIMPACT_SIGNATURE_EMAIL', 'contact@casaimpact.org'),
 
     'tagline' => 'Trois Régions • Une vision • Un impact',
 ];
