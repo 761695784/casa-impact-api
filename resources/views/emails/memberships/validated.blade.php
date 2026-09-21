@@ -34,7 +34,7 @@
                 </p>
                 <p style="margin:0;">
                     Si vous souhaitez inviter une personne à rejoindre Casa Impact, nous vous invitons simplement à l'orienter vers notre formulaire d'adhésion, afin qu'elle puisse soumettre sa demande dans les conditions prévues :<br>
-                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSd_wTaXTsb-yJ2v8qpgXHQRQutMjBGQqXBIZsSkiDgSDVjnrw/viewform?usp=publish-editor" style="color:#02542D;">Formulaire d'adhésion Casa Impact</a>
+                    <a href="https://casaimpact.org/adherer#formulaire" style="color:#02542D;"><strong>Formulaire d'adhésion Casa Impact</strong></a>
                 </p>
             </td>
         </tr>
