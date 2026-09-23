@@ -18,7 +18,10 @@ class StoreTestimonialRequest extends FormRequest
         return [
             'auteur' => ['required', 'string', 'max:255'],
             'role_organisation' => ['nullable', 'string', 'max:255'],
-            'citation' => ['required', 'string'],
+            // Plafonné à 150 caractères — accord du 2026-09-23 (les
+            // témoignages affichés sur /temoignages étaient parfois de
+            // longs paragraphes, cassant la mise en page des cartes).
+            'citation' => ['required', 'string', 'max:150'],
             'contexte' => ['nullable', 'string'],
             // Pas de règle `exists:...,id` : les tables `programs`/
             // `application_calls` (Modules 3/4) ne sont pas garanties

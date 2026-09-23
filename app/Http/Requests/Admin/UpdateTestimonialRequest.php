@@ -18,7 +18,8 @@ class UpdateTestimonialRequest extends FormRequest
         return [
             'auteur' => ['sometimes', 'required', 'string', 'max:255'],
             'role_organisation' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'citation' => ['sometimes', 'required', 'string'],
+            // Plafonné à 150 caractères — voir StoreTestimonialRequest.
+            'citation' => ['sometimes', 'required', 'string', 'max:150'],
             'contexte' => ['sometimes', 'nullable', 'string'],
             'program_id' => ['sometimes', 'nullable', 'integer'],
             'application_call_id' => ['sometimes', 'nullable', 'integer'],
